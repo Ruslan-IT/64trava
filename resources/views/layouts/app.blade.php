@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>@yield('title')</title>
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+
+
+
+
+
+</head>
+
+<body>
+
+@include('components.header')
+
+<main>
+    @yield('content')
+</main>
+
+@include('components.footer')
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dropdown меню
+        |--------------------------------------------------------------------------
+        */
+
+        const dropdownButtons = document.querySelectorAll(
+            '.menu-dropdown-button'
+        );
+
+        dropdownButtons.forEach(function (button) {
+
+            button.addEventListener('click', function (event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const dropdown = button.closest('.menu-dropdown');
+
+                // Закрываем остальные меню
+                document.querySelectorAll('.menu-dropdown').forEach(function (item) {
+
+                    if (item !== dropdown) {
+                        item.classList.remove('active');
+                    }
+
+                });
+
+                // Переключаем текущее
+                dropdown.classList.toggle('active');
+
+            });
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Закрытие dropdown при клике вне меню
+        |--------------------------------------------------------------------------
+        */
+
+        document.addEventListener('click', function (event) {
+
+            if (!event.target.closest('.menu-dropdown')) {
+
+                document.querySelectorAll('.menu-dropdown').forEach(function (item) {
+                    item.classList.remove('active');
+                });
+
+            }
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Мобильный поиск
+        |--------------------------------------------------------------------------
+        */
+
+        const mobileSearchButton = document.querySelector(
+            '.mobile-search-button'
+        );
+
+        const mobileSearch = document.querySelector(
+            '.mobile-search'
+        );
+
+
+        if (mobileSearchButton && mobileSearch) {
+
+            mobileSearchButton.addEventListener('click', function () {
+
+                mobileSearch.classList.toggle('active');
+
+                if (mobileSearch.classList.contains('active')) {
+
+                    const input = mobileSearch.querySelector('.search-input');
+
+                    if (input) {
+                        setTimeout(function () {
+                            input.focus();
+                        }, 100);
+                    }
+
+                }
+
+            });
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Мобильный бургер
+        |--------------------------------------------------------------------------
+        */
+
+        const burgerButton = document.querySelector(
+            '.burger-button'
+        );
+
+        const mainMenu = document.querySelector(
+            '.main-menu'
+        );
+
+
+        if (burgerButton && mainMenu) {
+
+            burgerButton.addEventListener('click', function () {
+
+                mainMenu.classList.toggle('active');
+
+                const icon = burgerButton.querySelector('i');
+
+                if (mainMenu.classList.contains('active')) {
+
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-xmark');
+
+                } else {
+
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+
+                }
+
+            });
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | При переходе с мобильного на desktop
+        |--------------------------------------------------------------------------
+        */
+
+        window.addEventListener('resize', function () {
+
+            if (window.innerWidth > 768) {
+
+                mainMenu?.classList.remove('active');
+                mobileSearch?.classList.remove('active');
+
+                document.querySelectorAll('.menu-dropdown').forEach(function (item) {
+                    item.classList.remove('active');
+                });
+
+                if (burgerButton) {
+
+                    const icon = burgerButton.querySelector('i');
+
+                    if (icon) {
+                        icon.classList.remove('fa-xmark');
+                        icon.classList.add('fa-bars');
+                    }
+
+                }
+
+            }
+
+        });
+
+
+
+
+        const cartButton = document.getElementById('cartButton');
+        const cartPopup = document.getElementById('cartPopup');
+        const cartPopupClose = document.getElementById('cartPopupClose');
+        const cartItems = document.getElementById('cartItems');
+        const cartSubtotal = document.getElementById('cartSubtotal');
+        const cartDiscount = document.getElementById('cartDiscount');
+        const cartDelivery = document.getElementById('cartDelivery');
+        const cartTotal = document.getElementById('cartTotal');
+
+        const discount = 200;
+        const delivery = 100;
+
+        function formatPrice(value) {
+            return `${value.toLocaleString('ru-RU')} ₽`;
+        }
+
+        function updateCart() {
+            let subtotal = 0;
+
+            document.querySelectorAll('.cart-item').forEach(item => {
+                const price = parseFloat(item.dataset.price) || 0;
+                const quantity = parseInt(item.querySelector('.cart-quantity-value').textContent) || 0;
+                const itemTotal = price * quantity;
+
+                subtotal += itemTotal;
+
+                item.querySelector('.cart-item-price').textContent = formatPrice(itemTotal);
+            });
+
+            const currentDiscount = subtotal > 0 ? discount : 0;
+            const currentDelivery = subtotal > 0 ? delivery : 0;
+            const total = Math.max(0, subtotal - currentDiscount + currentDelivery);
+
+            cartSubtotal.textContent = formatPrice(subtotal);
+            cartDiscount.textContent = formatPrice(currentDiscount);
+            cartDelivery.textContent = formatPrice(currentDelivery);
+            cartTotal.textContent = formatPrice(total);
+        }
+
+        function openCart() {
+
+            cartPopup.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCart() {
+            cartPopup.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        cartButton.addEventListener('click', openCart);
+
+        cartPopupClose.addEventListener('click', closeCart);
+
+        cartPopup.addEventListener('click', event => {
+            if (event.target === cartPopup) {
+                closeCart();
+            }
+        });
+
+        cartItems.addEventListener('click', event => {
+            const item = event.target.closest('.cart-item');
+
+            if (!item) {
+                return;
+            }
+
+            if (event.target.closest('.cart-item-remove')) {
+                item.remove();
+                updateCart();
+                return;
+            }
+
+            const quantityValue = item.querySelector('.cart-quantity-value');
+            let quantity = parseInt(quantityValue.textContent) || 1;
+
+            if (event.target.closest('.cart-quantity-minus')) {
+                quantity = Math.max(1, quantity - 1);
+            }
+
+            if (event.target.closest('.cart-quantity-plus')) {
+                quantity++;
+            }
+
+            quantityValue.textContent = quantity;
+
+            updateCart();
+        });
+
+        updateCart();
+
+    });
+</script>
+
+</body>
+
+</html>
