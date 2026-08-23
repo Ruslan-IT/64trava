@@ -39,6 +39,16 @@
 
 @include('components.header')
 
+<style>
+    @view-transition {
+        navigation: auto;
+    }
+
+    ::view-transition-group(root){
+        animation-duration: 0.2s;
+    }
+</style>
+
 <main>
     @yield('content')
 </main>
