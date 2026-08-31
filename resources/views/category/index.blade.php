@@ -60,7 +60,7 @@
                 <div class="catalog-content">
                     <div class="catalog-products">
 
-                        @if($currentCategory || $brand)
+                        @if($currentCategory || $brand || $tag)
 
                             <div class="catalog-welcome">
 
@@ -80,7 +80,18 @@
                                             alt="{{ $currentCategory->name }}"
                                         >
 
+                                    @elseif($tag)
+
+                                        {{-- Если у тега есть image --}}
+                                        @if($tag->image)
+                                            <img
+                                                src="{{ asset('storage/' . $tag->image) }}"
+                                                alt="{{ $tag->name }}"
+                                            >
+                                        @endif
+
                                     @endif
+
 
                                 </div>
 

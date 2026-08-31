@@ -14,6 +14,9 @@ class CatalogController
 
     public function index(Request $request, ?string $category = null)
     {
+
+
+
         $query = Product::query()
             ->with(['brand', 'categories', 'tags']);
 
@@ -90,6 +93,17 @@ class CatalogController
             $query->where('brand_id', $brand->id);
         }
 
+        /* |--------------------------------------------------------------------------
+        | ТЕГ |--------------------------------------------------------------------------
+        */
+        $tag = null;
+        if ($request->filled('tag')) {
+            $tag = Tag::where('slug', $request->tag)->firstOrFail();
+            $query->whereHas('tags', function ($q) use ($tag) {
+                $q->where('tags.id', $tag->id); });
+        }
+
+
         /*
         |--------------------------------------------------------------------------
         | ТОВАРЫ
@@ -129,6 +143,7 @@ class CatalogController
             'brands',
             'currentCategory',
             'brand',
+            'tag',
             'catalogInfo'
         ));
     }
@@ -136,6 +151,9 @@ class CatalogController
 
     public function brand(Brand $brand)
     {
+
+        $tag = null;
+
         $products = Product::query()
             ->with(['brand', 'categories', 'tags'])
             ->where('brand_id', $brand->id)
@@ -152,6 +170,7 @@ class CatalogController
             ->get();
 
         $currentCategory = null;
+        $tag = null;
 
         $catalogInfo = $brand;
 
@@ -161,6 +180,7 @@ class CatalogController
             'brands',
             'currentCategory',
             'brand',
+            'tag',
             'catalogInfo'
         ));
     }
@@ -200,6 +220,7 @@ class CatalogController
             'brands',
             'currentCategory',
             'brand',
+            'tag',
             'catalogInfo'
         ));
     }

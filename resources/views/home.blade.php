@@ -231,7 +231,7 @@
                             </h2>
 
                             <p class="products-promo-text">
-                                {{ $promoProduct->brand }}
+                                {{ $promoProduct->brand->name }}
                             </p>
 
                             <a href="#" class="products-promo-link">
