@@ -1,53 +1,28 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>@yield('title')</title>
-
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
-
-
+    @yield('seo')
+    @stack('schema')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-
-
-
-
-
+    <link rel="stylesheet" href="{{ asset('css/style-1.css') }}">
+    @livewireStyles
 </head>
 
 <body>
 
 @include('components.header')
 
-<style>
-    @view-transition {
-        navigation: auto;
-    }
 
-    ::view-transition-group(root){
-        animation-duration: 0.2s;
-    }
-</style>
+
+
 
 <main>
     @yield('content')
@@ -319,8 +294,15 @@
         updateCart();
 
     });
+
+
+
 </script>
 
+
+
+
+@livewireScripts
 </body>
 
 </html>
