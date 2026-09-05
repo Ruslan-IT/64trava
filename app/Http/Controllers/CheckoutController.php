@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Services\CartService;
 use App\Services\OrderExcelService;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
@@ -84,7 +85,7 @@ class CheckoutController extends Controller
     /**
      * Сохранение заказа.
      */
-    public function store(Request $request, CartService $cartService, OrderExcelService $orderExcelService) {
+    public function store(Request $request, CartService $cartService, OrderExcelService $orderExcelService, TelegramService $telegramService) {
         /*
         |--------------------------------------------------------------------------
         | Проверяем данные клиента
@@ -272,6 +273,106 @@ class CheckoutController extends Controller
         */
 
         $orderExcelService->save($orderData);
+
+
+
+        /*
+|--------------------------------------------------------------------------
+| Отправляем заказ в Telegram
+|--------------------------------------------------------------------------
+*/
+
+        $telegramMessage = "🛒 НОВЫЙ ЗАКАЗ {$orderData['number']}\n\n";
+
+        $telegramMessage .= "👤 Клиент:\n";
+        $telegramMessage .= $orderData['name'] . "\n\n";
+
+        $telegramMessage .= "📞 Телефон:\n";
+        $telegramMessage .= $orderData['phone'] . "\n\n";
+
+        $telegramMessage .= "📧 Email:\n";
+        $telegramMessage .= $orderData['email'] . "\n\n";
+
+        $telegramMessage .= "📍 Город:\n";
+        $telegramMessage .= $orderData['city'] . "\n\n";
+
+        $telegramMessage .= "🏠 Адрес:\n";
+        $telegramMessage .= $orderData['address'] . "\n\n";
+
+        if (!empty($orderData['comment'])) {
+            $telegramMessage .= "💬 Комментарий:\n";
+            $telegramMessage .= $orderData['comment'] . "\n\n";
+        }
+
+        $telegramMessage .= "📦 Товары:\n";
+
+        foreach ($orderData['items'] as $item) {
+
+            $telegramMessage .= "• {$item['product_name']}";
+
+            if (!empty($item['variant_name'])) {
+                $telegramMessage .= " — {$item['variant_name']}";
+            }
+
+            $telegramMessage .= "\n";
+
+            if (!empty($item['sku'])) {
+                $telegramMessage .= "  Артикул: {$item['sku']}\n";
+            }
+
+            $telegramMessage .= "  {$item['quantity']} шт. × "
+                . number_format($item['price'], 0, '.', ' ')
+                . " ₽ = "
+                . number_format($item['total'], 0, '.', ' ')
+                . " ₽\n\n";
+        }
+
+        $telegramMessage .= "💰 Сумма товаров: "
+            . number_format($orderData['subtotal'], 0, '.', ' ')
+            . " ₽\n";
+
+        $telegramMessage .= "🏷 Скидка: "
+            . number_format($orderData['discount'], 0, '.', ' ')
+            . " ₽\n";
+
+        $telegramMessage .= "🚚 Доставка: "
+            . number_format($orderData['delivery'], 0, '.', ' ')
+            . " ₽\n";
+
+        $telegramMessage .= "💵 ИТОГО: "
+            . number_format($orderData['total'], 0, '.', ' ')
+            . " ₽\n\n";
+
+        $telegramMessage .= "💳 Оплата: {$orderData['payment_method']}\n";
+
+        if (!empty($orderData['promo_code'])) {
+            $telegramMessage .= "🎟 Промокод: {$orderData['promo_code']}\n";
+        }
+
+        $telegramMessage .= "\n🕐 {$orderData['created_at']}";
+
+        /*
+        |--------------------------------------------------------------------------
+        | Отправляем сообщение
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+            $telegramResult = $telegramService->sendMessage($telegramMessage);
+
+            if ($telegramResult['status'] !== 200) {
+                \Log::error('Telegram order notification failed', [
+                    'order' => $orderNumber,
+                    'response' => $telegramResult,
+                ]);
+            }
+        } catch (\Throwable $e) {
+
+            \Log::error('Telegram order notification exception', [
+                'order' => $orderNumber,
+                'message' => $e->getMessage(),
+            ]);
+        }
 
         /*
         |--------------------------------------------------------------------------
