@@ -10,6 +10,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SeedbanksController;
 use App\Services\TelegramService;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 
@@ -98,10 +99,22 @@ Route::get('/test-cart', function () {
 });
 
 
-Route::get('/telegram-test', function (TelegramService $telegram) {
-    return $telegram->sendMessage(
-        "🔔 Тестовое сообщение\n\nTelegram подключён!"
+Route::get('/telegram-test', function () {
+    $token = config('services.telegram.bot_token');
+    $chatId = config('services.telegram.manager_chat_id');
+
+    $response = Http::timeout(10)->post(
+        'https://api.telegram.org/bot' . $token . '/sendMessage',
+        [
+            'chat_id' => $chatId,
+            'text' => '🔔 Тестовое сообщение от Laravel',
+        ]
     );
+
+    return [
+        'status' => $response->status(),
+        'body' => $response->json(),
+    ];
 });
 
 
