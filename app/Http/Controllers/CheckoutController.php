@@ -266,6 +266,7 @@ class CheckoutController extends Controller
             'total' => $total,
         ];
 
+
         /*
         |--------------------------------------------------------------------------
         | Сохраняем заказ в Excel
@@ -274,105 +275,166 @@ class CheckoutController extends Controller
 
         $orderExcelService->save($orderData);
 
-
-
-        /*
-|--------------------------------------------------------------------------
-| Отправляем заказ в Telegram
-|--------------------------------------------------------------------------
-*/
-
-        $telegramMessage = "🛒 НОВЫЙ ЗАКАЗ {$orderData['number']}\n\n";
-
-        $telegramMessage .= "👤 Клиент:\n";
-        $telegramMessage .= $orderData['name'] . "\n\n";
-
-        $telegramMessage .= "📞 Телефон:\n";
-        $telegramMessage .= $orderData['phone'] . "\n\n";
-
-        $telegramMessage .= "📧 Email:\n";
-        $telegramMessage .= $orderData['email'] . "\n\n";
-
-        $telegramMessage .= "📍 Город:\n";
-        $telegramMessage .= $orderData['city'] . "\n\n";
-
-        $telegramMessage .= "🏠 Адрес:\n";
-        $telegramMessage .= $orderData['address'] . "\n\n";
-
-        if (!empty($orderData['comment'])) {
-            $telegramMessage .= "💬 Комментарий:\n";
-            $telegramMessage .= $orderData['comment'] . "\n\n";
-        }
-
-        $telegramMessage .= "📦 Товары:\n";
-
-        foreach ($orderData['items'] as $item) {
-
-            $telegramMessage .= "• {$item['product_name']}";
-
-            if (!empty($item['variant_name'])) {
-                $telegramMessage .= " — {$item['variant_name']}";
-            }
-
-            $telegramMessage .= "\n";
-
-            if (!empty($item['sku'])) {
-                $telegramMessage .= "  Артикул: {$item['sku']}\n";
-            }
-
-            $telegramMessage .= "  {$item['quantity']} шт. × "
-                . number_format($item['price'], 0, '.', ' ')
-                . " ₽ = "
-                . number_format($item['total'], 0, '.', ' ')
-                . " ₽\n\n";
-        }
-
-        $telegramMessage .= "💰 Сумма товаров: "
-            . number_format($orderData['subtotal'], 0, '.', ' ')
-            . " ₽\n";
-
-        $telegramMessage .= "🏷 Скидка: "
-            . number_format($orderData['discount'], 0, '.', ' ')
-            . " ₽\n";
-
-        $telegramMessage .= "🚚 Доставка: "
-            . number_format($orderData['delivery'], 0, '.', ' ')
-            . " ₽\n";
-
-        $telegramMessage .= "💵 ИТОГО: "
-            . number_format($orderData['total'], 0, '.', ' ')
-            . " ₽\n\n";
-
-        $telegramMessage .= "💳 Оплата: {$orderData['payment_method']}\n";
-
-        if (!empty($orderData['promo_code'])) {
-            $telegramMessage .= "🎟 Промокод: {$orderData['promo_code']}\n";
-        }
-
-        $telegramMessage .= "\n🕐 {$orderData['created_at']}";
-
         /*
         |--------------------------------------------------------------------------
-        | Отправляем сообщение
+        | Отправляем заказ в Telegram
         |--------------------------------------------------------------------------
         */
 
         try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Формируем сообщение
+            |--------------------------------------------------------------------------
+            */
+
+            $telegramMessage = "🛒 НОВЫЙ ЗАКАЗ {$orderData['number']}\n\n";
+
+            $telegramMessage .= "👤 Клиент:\n";
+            $telegramMessage .= $orderData['name'] . "\n\n";
+
+            $telegramMessage .= "📞 Телефон:\n";
+            $telegramMessage .= $orderData['phone'] . "\n\n";
+
+            $telegramMessage .= "📧 Email:\n";
+            $telegramMessage .= $orderData['email'] . "\n\n";
+
+            $telegramMessage .= "📍 Город:\n";
+            $telegramMessage .= $orderData['city'] . "\n\n";
+
+            $telegramMessage .= "🏠 Адрес:\n";
+            $telegramMessage .= $orderData['address'] . "\n\n";
+
+            if (!empty($orderData['comment'])) {
+                $telegramMessage .= "💬 Комментарий:\n";
+                $telegramMessage .= $orderData['comment'] . "\n\n";
+            }
+
+            $telegramMessage .= "📦 Товары:\n";
+
+            foreach ($orderData['items'] as $item) {
+
+                $telegramMessage .= "• {$item['product_name']}";
+
+                if (!empty($item['variant_name'])) {
+                    $telegramMessage .= " — {$item['variant_name']}";
+                }
+
+                $telegramMessage .= "\n";
+
+                if (!empty($item['sku'])) {
+                    $telegramMessage .= "  SKU: {$item['sku']}\n";
+                }
+
+                $telegramMessage .= "  {$item['quantity']} шт. × "
+                    . number_format($item['price'], 0, '.', ' ')
+                    . " ₽ = "
+                    . number_format($item['total'], 0, '.', ' ')
+                    . " ₽\n";
+            }
+
+            $telegramMessage .= "\n";
+
+            $telegramMessage .= "💰 Сумма товаров: "
+                . number_format($orderData['subtotal'], 0, '.', ' ')
+                . " ₽\n";
+
+            $telegramMessage .= "🏷 Скидка: "
+                . number_format($orderData['discount'], 0, '.', ' ')
+                . " ₽\n";
+
+            $telegramMessage .= "🚚 Доставка: "
+                . number_format($orderData['delivery'], 0, '.', ' ')
+                . " ₽\n";
+
+            $telegramMessage .= "💵 ИТОГО: "
+                . number_format($orderData['total'], 0, '.', ' ')
+                . " ₽\n\n";
+
+            $telegramMessage .= "💳 Оплата: {$orderData['payment_method']}\n";
+
+            if (!empty($orderData['promo_code'])) {
+                $telegramMessage .= "🎟 Промокод: {$orderData['promo_code']}\n";
+            }
+
+            $telegramMessage .= "\n🕐 {$orderData['created_at']}";
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Отправляем текст заказа
+            |--------------------------------------------------------------------------
+            */
+
             $telegramResult = $telegramService->sendMessage($telegramMessage);
 
             if ($telegramResult['status'] !== 200) {
-                \Log::error('Telegram order notification failed', [
-                    'order' => $orderNumber,
+                \Log::error('Telegram order message failed', [
+                    'order' => $orderData['number'],
                     'response' => $telegramResult,
                 ]);
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Получаем путь к Excel-файлу
+            |--------------------------------------------------------------------------
+            */
+
+            $excelPath = $orderExcelService->getFilePath(
+                $orderData['number']
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Отправляем Excel
+            |--------------------------------------------------------------------------
+            */
+
+            if ($excelPath) {
+
+                $telegramFileResult = $telegramService->sendDocument(
+                    $excelPath,
+                    '📎 Excel заказа ' . $orderData['number']
+                );
+
+                if ($telegramFileResult['status'] !== 200) {
+                    \Log::error('Telegram order file failed', [
+                        'order' => $orderData['number'],
+                        'file' => $excelPath,
+                        'response' => $telegramFileResult,
+                    ]);
+                }
+            }
+
         } catch (\Throwable $e) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Telegram не должен ломать оформление заказа
+            |--------------------------------------------------------------------------
+            */
+
             \Log::error('Telegram order notification exception', [
-                'order' => $orderNumber,
+                'order' => $orderData['number'],
                 'message' => $e->getMessage(),
             ]);
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Очищаем корзину
+        |--------------------------------------------------------------------------
+        */
+
+        $cartService->clear();
+
+
+
 
         /*
         |--------------------------------------------------------------------------
