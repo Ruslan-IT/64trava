@@ -98,13 +98,10 @@ Route::get('/test-cart', function () {
 });
 
 
-
 Route::get('/telegram-test', function (TelegramService $telegram) {
-    $telegram->sendMessage(
-        "🔔 Тестовое сообщение\n\nTelegram успешно подключён к Laravel!"
+    return $telegram->sendMessage(
+        "🔔 Тестовое сообщение\n\nTelegram подключён!"
     );
-
-    return 'Сообщение отправлено';
 });
 
 

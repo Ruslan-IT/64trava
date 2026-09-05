@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Http;
 
 class TelegramService
 {
-    public function sendMessage(string $message): bool
+    public function sendMessage(string $message): array
     {
-        $response = Http::post(
+        $response = Http::timeout(10)->post(
             'https://api.telegram.org/bot' . config('services.telegram.bot_token') . '/sendMessage',
             [
                 'chat_id' => config('services.telegram.manager_chat_id'),
@@ -16,6 +16,9 @@ class TelegramService
             ]
         );
 
-        return $response->successful();
+        return [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ];
     }
 }
