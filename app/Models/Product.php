@@ -64,6 +64,8 @@ class Product extends Model
         'gallery' => 'array',
     ];
 
+
+
     public function brand()
     {
         return $this->belongsTo(Brand::class, 'brand_id');
@@ -82,6 +84,11 @@ class Product extends Model
     public function faqs(): HasMany
     {
         return $this->hasMany(ProductFaq::class)->orderBy('sort_order');
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 
     protected static function boot()

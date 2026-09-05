@@ -129,6 +129,72 @@ class ProductForm
 
                         /*
                         |--------------------------------------------------------------------------
+                        | Фасовка
+                        |--------------------------------------------------------------------------
+                        */
+
+                        Section::make('Фасовки')
+                            ->schema([
+
+                                Repeater::make('variants')
+                                    ->relationship('variants')
+                                    ->label('Варианты товара')
+                                    ->schema([
+
+                                        TextInput::make('package_size')
+                                            ->label('Фасовка')
+                                            ->numeric()
+                                            ->integer()
+                                            ->minValue(1)
+                                            ->required()
+                                            ->suffix('шт.'),
+
+                                        TextInput::make('sku')
+                                            ->label('Артикул')
+                                            ->required()
+                                            ->maxLength(100),
+
+                                        TextInput::make('price')
+                                            ->label('Цена')
+                                            ->numeric()
+                                            ->required()
+                                            ->prefix('$'),
+
+                                        TextInput::make('old_price')
+                                            ->label('Старая цена')
+                                            ->numeric()
+                                            ->nullable()
+                                            ->prefix('$'),
+
+                                        TextInput::make('stock')
+                                            ->label('Остаток')
+                                            ->numeric()
+                                            ->integer()
+                                            ->minValue(0)
+                                            ->default(0)
+                                            ->required(),
+
+                                    ])
+                                    ->columns(5)
+                                    ->addActionLabel('Добавить фасовку')
+                                    ->reorderable()
+                                    ->collapsible()
+                                    ->itemLabel(function (array $state): ?string {
+                                        if (empty($state['package_size'])) {
+                                            return 'Новая фасовка';
+                                        }
+
+                                        return $state['package_size'] . ' шт.';
+                                    })
+                                    ->columnSpanFull(),
+
+                            ])
+                            ->columnSpanFull()
+                            ->collapsible(),
+
+
+                        /*
+                        |--------------------------------------------------------------------------
                         | ХАРАКТЕРИСТИКИ
                         |--------------------------------------------------------------------------
                         */
@@ -191,30 +257,6 @@ class ProductForm
                                     ->nullable()
                                     ->columnSpanFull(),
 
-                                Select::make('seed_type')
-                                    ->label('Тип семян')
-                                    ->options([
-                                        'A' => 'Автоцветущие',
-                                        'F' => 'Фотопериодные',
-                                        'R' => 'Регулярные',
-                                    ])
-                                    ->required(),
-
-                                TextInput::make('height')
-                                    ->label('Высота')
-                                    ->placeholder('70-100 см')
-                                    ->nullable(),
-
-                                TextInput::make('yield')
-                                    ->label('Урожайность')
-                                    ->placeholder('400-500 г/м²')
-                                    ->nullable(),
-
-                                Textarea::make('advantages')
-                                    ->label('Преимущества')
-                                    ->rows(3)
-                                    ->nullable()
-                                    ->columnSpanFull(),
 
                             ])
                             ->columns(2),

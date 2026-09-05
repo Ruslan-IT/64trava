@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title')</title>
     @yield('seo')
@@ -13,6 +15,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ asset('css/style-1.css') }}">
+
+
+
+
     @livewireStyles
 </head>
 
@@ -218,28 +224,6 @@
             return `${value.toLocaleString('ru-RU')} ₽`;
         }
 
-        function updateCart() {
-            let subtotal = 0;
-
-            document.querySelectorAll('.cart-item').forEach(item => {
-                const price = parseFloat(item.dataset.price) || 0;
-                const quantity = parseInt(item.querySelector('.cart-quantity-value').textContent) || 0;
-                const itemTotal = price * quantity;
-
-                subtotal += itemTotal;
-
-                item.querySelector('.cart-item-price').textContent = formatPrice(itemTotal);
-            });
-
-            const currentDiscount = subtotal > 0 ? discount : 0;
-            const currentDelivery = subtotal > 0 ? delivery : 0;
-            const total = Math.max(0, subtotal - currentDiscount + currentDelivery);
-
-            cartSubtotal.textContent = formatPrice(subtotal);
-            cartDiscount.textContent = formatPrice(currentDiscount);
-            cartDelivery.textContent = formatPrice(currentDelivery);
-            cartTotal.textContent = formatPrice(total);
-        }
 
         function openCart() {
 
@@ -262,36 +246,9 @@
             }
         });
 
-        cartItems.addEventListener('click', event => {
-            const item = event.target.closest('.cart-item');
 
-            if (!item) {
-                return;
-            }
 
-            if (event.target.closest('.cart-item-remove')) {
-                item.remove();
-                updateCart();
-                return;
-            }
 
-            const quantityValue = item.querySelector('.cart-quantity-value');
-            let quantity = parseInt(quantityValue.textContent) || 1;
-
-            if (event.target.closest('.cart-quantity-minus')) {
-                quantity = Math.max(1, quantity - 1);
-            }
-
-            if (event.target.closest('.cart-quantity-plus')) {
-                quantity++;
-            }
-
-            quantityValue.textContent = quantity;
-
-            updateCart();
-        });
-
-        updateCart();
 
     });
 
@@ -302,7 +259,21 @@
 
 
 
+
+
+
+
 @livewireScripts
+
+<script>
+    window.cartUrls = {
+        update: @json(route('cart.update')),
+        remove: @json(url('/cart/remove')),
+    };
+</script>
+{{--
+<script src="{{ asset('js/cart.js') }}"></script>
+<script src="{{ asset('js/cart-page.js') }}"></script>--}}
 </body>
 
 </html>

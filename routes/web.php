@@ -1,6 +1,10 @@
 <?php
 
+use App\Filament\Pages\Orders;
+use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductsController;
@@ -44,7 +48,67 @@ Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.in
 
 
 
-Route::get('/cart', function () {
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+
+Route::post('/cart/add', [CartController::class, 'add'])
+    ->name('cart.add');
+
+Route::post('/cart/update', [CartController::class, 'update'])
+    ->name('cart.update');
+
+Route::delete('/cart/remove/{variantId}', [CartController::class, 'remove'])
+    ->name('cart.remove');
+
+Route::delete('/cart/clear', [CartController::class, 'clear'])
+    ->name('cart.clear');
+
+Route::get('/cart/count', [CartController::class, 'count'])
+    ->name('cart.count');
+
+Route::get('/cart/popup', [CartController::class, 'popup'])
+    ->name('cart.popup');
+
+
+
+
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
+
+
+
+/*Route::get('/admin/orders/{number}', [AdminOrderController::class, 'show'])
+    ->name('admin.orders.show');*/
+
+Route::get('/admin/orders/{number}/download', [AdminOrderController::class, 'download'])
+    ->name('admin.orders.download');
+
+
+
+Route::get('/cart-2', function () {return view('cart-2');});
+
+
+
+Route::get('/test-cart', function () {
+    dd(session()->get('cart', []));
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*Route::get('/cart-1', function () {
     return view('cart');
 });
 
@@ -54,7 +118,7 @@ Route::get('/cart-2', function () {
 
 Route::get('/cart-3', function () {
     return view('cart-3');
-});
+});*/
 
 
 

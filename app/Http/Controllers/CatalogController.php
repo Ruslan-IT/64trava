@@ -225,4 +225,13 @@ class CatalogController
         ));
     }
 
+    public function count()
+    {
+        return response()->json([
+            'success' => true,
+            'count' => $this->cart->count(),
+            'total' => $this->cart->total(),
+        ]);
+    }
+
 }

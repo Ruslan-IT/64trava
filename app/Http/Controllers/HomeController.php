@@ -22,9 +22,11 @@ class HomeController
         $tags = Tag::all();
 
 
-        $newProducts = Product::whereHas('categories', function ($query) {
-            $query->where('id', 7);//новинки
-        })->get();
+        $newProducts = Product::with(['brand', 'variants'])
+            ->whereHas('categories', function ($query) {
+                $query->where('id', 7); // Новинки
+            })
+            ->get();
 
         $productPopular = Product::whereHas('categories', function ($query) {
             $query->where('id', 6);//популярные
