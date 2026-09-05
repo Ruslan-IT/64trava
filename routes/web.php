@@ -9,6 +9,7 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SeedbanksController;
+use App\Services\TelegramService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 
@@ -98,7 +99,13 @@ Route::get('/test-cart', function () {
 
 
 
+Route::get('/telegram-test', function (TelegramService $telegram) {
+    $telegram->sendMessage(
+        "🔔 Тестовое сообщение\n\nTelegram успешно подключён к Laravel!"
+    );
 
+    return 'Сообщение отправлено';
+});
 
 
 
