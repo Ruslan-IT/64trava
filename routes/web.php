@@ -30,7 +30,7 @@ Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
 
 Route::get('/c', [CatalogController::class, 'index'])->name('catalog.index');
 
-Route::get('/catalog/{category}', [CatalogController::class, 'index'])->name('catalog.category');
+Route::get('/c/{category}', [CatalogController::class, 'index'])->name('catalog.category');
 
 Route::get('/brands/{brand}', [CatalogController::class, 'brand'])->name('catalog.brand');
 
