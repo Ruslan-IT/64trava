@@ -28,14 +28,14 @@ Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
 
 
-Route::get('/c', [CatalogController::class, 'index'])->name('catalog.index');
+Route::get('/cat', [CatalogController::class, 'index'])->name('catalog.index');
 
-Route::get('/c/{category}', [CatalogController::class, 'index'])->name('catalog.category');
+Route::get('/cat/{category}', [CatalogController::class, 'index'])->name('catalog.category');
 
 Route::get('/brands/{brand}', [CatalogController::class, 'brand'])->name('catalog.brand');
 
 
-Route::get('/catalog/tag/{tag}', [CatalogController::class, 'tag'])->name('catalog.tag');
+Route::get('/cat/tag/{tag}', [CatalogController::class, 'tag'])->name('catalog.tag');
 
 
 Route::get('product/{slug}', [ProductsController::class, 'show'])->name('product.show');
