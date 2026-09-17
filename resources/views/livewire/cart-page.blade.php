@@ -322,7 +322,7 @@
 
 
                             <div class="cart-bottom-info-block">
-                                <a href="#" class="cart-action-button cart-action-button--image">
+                                <a href="#" class="cart-action-button cart-action-button--image" id="test">
 
                                     <span>Выбрать семку</span>
                                 </a>
@@ -451,4 +451,1173 @@
             </div>
         </section>
     </main>
+
+
+
+    {{-- POPUP БОНУСОВ --}}
+    <div class="gift-popup-overlay">
+
+        <div class="gift-popup">
+
+            <div class="gift-popup__content">
+
+                <!-- HEADER -->
+
+                <div class="gift-popup__header">
+
+                    <h2 class="gift-popup__title">
+                        Ваш заказ на сумму
+                        {{ number_format($cartTotal, 0, ',', ' ') }} ₽
+                    </h2>
+                    <button
+                        type="button"
+                        class="gift-popup__close"
+                        aria-label="Закрыть"
+                    ></button>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <p class="gift-popup__subtitle">
+                    Выбирая подарки, вам доступно на выбор
+                </p>
+
+                <p class="gift-popup__info">
+                    Узнать подробности можно
+                    <a href="#">на странице акции</a>
+                </p>
+
+
+                <!-- CATEGORIES -->
+
+                <div class="gift-popup__categories">
+
+                    @foreach($bonuses['groups'] as $index => $group)
+
+                        <button
+                            type="button"
+                            class="gift-popup__category {{ $index === 0 ? 'gift-popup__category--active' : '' }}"
+                            data-brand-id="{{ $group['brand_id'] }}"
+                        >
+                            <span>{{ $group['brand_name'] }}</span>
+
+                            <span class="gift-popup__category-count">
+                                {{ $group['quantity'] }} шт.
+                            </span>
+                        </button>
+
+                    @endforeach
+
+                </div>
+
+
+                <!-- PRODUCTS -->
+
+                <div class="gift-popup__products">
+
+                    @foreach($bonuses['groups'] as $groupIndex => $group)
+
+                        <div
+                            class="gift-popup__product-group"
+                            data-brand-id="{{ $group['brand_id'] }}"
+                            data-quantity="{{ $group['quantity'] }}"
+                            @if($groupIndex !== 0) style="display: none;" @endif
+                        >
+
+                            @foreach($group['products'] as $bonusProduct)
+
+                                @php
+                                    $product = \App\Models\Product::with('brand')
+                                        ->find($bonusProduct['product_id']);
+                                @endphp
+
+                                @if($product)
+
+                                    <article
+                                        class="gift-product"
+                                        data-bonus-product-id="{{ $bonusProduct['bonus_product_id'] }}"
+                                        data-product-id="{{ $bonusProduct['product_id'] }}"
+                                        data-stock="{{ $bonusProduct['stock'] }}"
+                                    >
+
+                                        <div class="gift-product__image">
+                                            <img
+                                                src="{{ $product->image
+                                    ? asset('storage/' . $product->image)
+                                    : asset('images/product-placeholder.jpg') }}"
+                                                alt="{{ $product->name }}"
+                                            >
+                                        </div>
+
+                                        <div class="gift-product__body">
+
+                                            <h3 class="gift-product__title">
+                                                {{ $product->name }}
+                                            </h3>
+
+                                            <div class="gift-product__name">
+                                                {{ $product->brand->name }}
+                                            </div>
+
+                                            <div class="gift-product__attributes">
+
+                                                @if($product->thc)
+                                                    <div class="gift-product__attribute">
+
+                                                        <img
+                                                            class="gift-product__attribute-icon"
+                                                            src="/images/icon-percent.svg"
+                                                            alt=""
+                                                        >
+
+                                                        <span>
+                                            {{ $product->thc }}
+                                        </span>
+
+                                                    </div>
+                                                @endif
+
+                                                @if($product->height)
+                                                    <div class="gift-product__attribute gift-product__attribute--wide">
+
+                                                        <img
+                                                            class="gift-product__attribute-icon"
+                                                            src="/images/icon-size.svg"
+                                                            alt=""
+                                                        >
+
+                                                        <span>
+                                            {{ $product->height }}
+                                        </span>
+
+                                                    </div>
+                                                @endif
+
+                                                @if($product->seed_type)
+                                                    <div class="gift-product__attribute">
+                                                        Тип семян: {{ $product->seed_type }}
+                                                    </div>
+                                                @endif
+
+                                            </div>
+
+                                            <div class="gift-product__quantity">
+
+                                                <button
+                                                    type="button"
+                                                    class="gift-product__quantity-minus"
+                                                >
+                                                    −
+                                                </button>
+
+                                                <input
+                                                    type="number"
+                                                    class="gift-product__quantity-input"
+                                                    value="0"
+                                                    min="0"
+                                                    max="{{ min($bonusProduct['stock'], $group['quantity']) }}"
+                                                    readonly
+                                                >
+
+                                                <button
+                                                    type="button"
+                                                    class="gift-product__quantity-plus"
+                                                >
+                                                    +
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+
+                                    </article>
+
+                                @endif
+
+                            @endforeach
+
+                        </div>
+
+                    @endforeach
+
+                </div>
+
+
+                <!-- MORE -->
+
+                <a href="#" class="gift-popup__more">
+                    Посмотреть еще
+                </a>
+
+
+                <!-- SORTING -->
+
+                <div class="gift-popup__sorting">
+
+                    <button class="gift-popup__sort gift-popup__sort--active">
+                        Собери рандомно
+                    </button>
+
+                    <button class="gift-popup__sort">
+                        Собери по росту
+                    </button>
+
+                    <button class="gift-popup__sort">
+                        Собери по ТГК
+                    </button>
+
+                    <button class="gift-popup__sort">
+                        Собери по сроку
+                    </button>
+
+                    <button class="gift-popup__sort">
+                        Покрученые бонусы
+                    </button>
+
+                    <button class="gift-popup__sort">
+                        Побольше бонусов
+                    </button>
+
+                </div>
+
+
+                <!-- YOU SELECTED -->
+
+                <h3 class="gift-popup__selected-title">
+                    Вы выбрали
+                </h3>
+
+                <div class="gift-popup__selection-box">
+
+                    <div
+                        class="gift-popup__selection-items"
+                        id="giftSelectedItems"
+                    >
+                    </div>
+
+                </div>
+
+
+                <!-- LEFT TO SELECT -->
+
+                <h3 class="gift-popup__selected-title">
+                    Вам осталось выбрать
+                </h3>
+
+                <div class="gift-popup__selection-box">
+
+                    <div
+                        class="gift-popup__selection-items"
+                        id="giftRemainingItems"
+                    >
+                    </div>
+
+                </div>
+
+
+                <!-- CHOSEN SEEDS -->
+
+                <h3 class="gift-popup__seeds-title">
+                    Выбранные семена
+                </h3>
+
+                <div
+                    class="gift-popup__seeds"
+                    id="giftSelectedSeeds"
+                >
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="gift-popup__actions">
+
+                    <button class="gift-popup__action gift-popup__action--active" id="giftReset">
+                        Сбросить активные
+                    </button>
+
+                    <button class="gift-popup__action"  id="giftReturn">
+                        Вернуть в корзину
+                    </button>
+
+                    <button class="gift-popup__action" id="giftConfirm">
+                        Подтвердить
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
 </div>
+
+@script
+<script>
+    const initGiftPopup = () => {
+
+        const openButton = document.getElementById('test');
+        const popupOverlay = document.querySelector('.gift-popup-overlay');
+        const popup = document.querySelector('.gift-popup');
+        const closeButton = document.querySelector('.gift-popup__close');
+
+        if (!openButton || !popupOverlay || !popup || !closeButton) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Контейнеры
+        |--------------------------------------------------------------------------
+        */
+
+        const selectedItemsContainer = popupOverlay.querySelector(
+            '#giftSelectedItems'
+        );
+
+        const remainingItemsContainer = popupOverlay.querySelector(
+            '#giftRemainingItems'
+        );
+
+        const selectedSeedsContainer = popupOverlay.querySelector(
+            '#giftSelectedSeeds'
+        );
+
+        const resetButton = popupOverlay.querySelector('#giftReset');
+        const returnButton = popupOverlay.querySelector('#giftReturn');
+        const confirmButton = popupOverlay.querySelector('#giftConfirm');
+
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Открытие popup
+        |--------------------------------------------------------------------------
+        */
+
+        openButton.onclick = function (event) {
+
+            event.preventDefault();
+
+            popupOverlay.classList.add('is-open');
+
+            document.body.style.overflow = 'hidden';
+
+            updateSelectionInfo();
+        };
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Закрытие popup
+        |--------------------------------------------------------------------------
+        */
+
+        closeButton.onclick = function () {
+            closePopup();
+        };
+
+
+        popupOverlay.onclick = function (event) {
+
+            if (event.target === popupOverlay) {
+                closePopup();
+            }
+
+        };
+
+
+        function closePopup() {
+
+            popupOverlay.classList.remove('is-open');
+
+            document.body.style.overflow = '';
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Категории
+        |--------------------------------------------------------------------------
+        */
+
+        const categoryButtons = popupOverlay.querySelectorAll(
+            '.gift-popup__category'
+        );
+
+        const productGroups = popupOverlay.querySelectorAll(
+            '.gift-popup__product-group'
+        );
+
+
+        categoryButtons.forEach(button => {
+
+            button.onclick = function () {
+
+                const brandId = this.dataset.brandId;
+
+
+                // Активная категория
+
+                categoryButtons.forEach(item => {
+
+                    item.classList.remove(
+                        'gift-popup__category--active'
+                    );
+
+                });
+
+                this.classList.add(
+                    'gift-popup__category--active'
+                );
+
+
+                // Показываем товары выбранной категории
+
+                productGroups.forEach(group => {
+
+                    if (group.dataset.brandId === brandId) {
+
+                        group.style.display = '';
+
+                    } else {
+
+                        group.style.display = 'none';
+
+                    }
+
+                });
+
+
+                updateSelectionInfo();
+
+            };
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Получить выбранные товары
+        |--------------------------------------------------------------------------
+        */
+
+        const getCurrentSelection = () => {
+
+            const selection = [];
+
+
+            productGroups.forEach(group => {
+
+                const brandId = group.dataset.brandId;
+
+                const categoryButton = popupOverlay.querySelector(
+                    `.gift-popup__category[data-brand-id="${brandId}"]`
+                );
+
+                const brandName =
+                    categoryButton
+                        ?.querySelector('span')
+                        ?.textContent
+                        .trim() || '';
+
+
+                const products = group.querySelectorAll(
+                    '.gift-product'
+                );
+
+
+                products.forEach(product => {
+
+                    const input = product.querySelector(
+                        '.gift-product__quantity-input'
+                    );
+
+                    if (!input) {
+                        return;
+                    }
+
+
+                    const quantity = parseInt(
+                        input.value || 0,
+                        10
+                    );
+
+
+                    if (quantity <= 0) {
+                        return;
+                    }
+
+
+                    selection.push({
+
+                        brandId: brandId,
+
+                        brandName: brandName,
+
+                        bonusProductId:
+                        product.dataset.bonusProductId,
+
+                        productId:
+                        product.dataset.productId,
+
+                        name:
+                            product.querySelector(
+                                '.gift-product__title'
+                            )?.textContent
+                                .trim() || '',
+
+                        manufacturer:
+                            product.querySelector(
+                                '.gift-product__name'
+                            )?.textContent
+                                .trim() || '',
+
+                        quantity: quantity
+
+                    });
+
+                });
+
+            });
+
+
+            return selection;
+
+        };
+
+
+
+
+
+
+        confirmButton?.addEventListener('click', async function () {
+
+            const selection = getCurrentSelection();
+
+            console.log('BONUSES:', selection);
+
+            try {
+
+                const response = await fetch('{{ route('cart.bonuses') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bonuses: selection
+                    })
+                });
+
+                const result = await response.json();
+
+                console.log('BONUSES SAVED:', result);
+
+                if (!response.ok || !result.success) {
+                    console.error('Ошибка сохранения бонусов');
+                    return;
+                }
+
+                closePopup();
+
+            } catch (error) {
+
+                console.error('Ошибка запроса бонусов:', error);
+
+            }
+
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Получить выбранное количество в категории
+        |--------------------------------------------------------------------------
+        */
+
+        const getGroupSelectedQuantity = (group) => {
+
+            let total = 0;
+
+
+            group.querySelectorAll(
+                '.gift-product__quantity-input'
+            ).forEach(input => {
+
+                total += parseInt(
+                    input.value || 0,
+                    10
+                );
+
+            });
+
+
+            return total;
+
+        };
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Обновление кнопок + / -
+        |--------------------------------------------------------------------------
+        */
+
+        const updateGroupButtons = (group) => {
+
+            const maxQuantity = parseInt(
+                group.dataset.quantity || 0,
+                10
+            );
+
+            const selectedQuantity =
+                getGroupSelectedQuantity(group);
+
+
+            const products = group.querySelectorAll(
+                '.gift-product'
+            );
+
+
+            products.forEach(product => {
+
+                const minusButton =
+                    product.querySelector(
+                        '.gift-product__quantity-minus'
+                    );
+
+                const plusButton =
+                    product.querySelector(
+                        '.gift-product__quantity-plus'
+                    );
+
+                const input =
+                    product.querySelector(
+                        '.gift-product__quantity-input'
+                    );
+
+
+                if (!minusButton || !plusButton || !input) {
+                    return;
+                }
+
+
+                const currentQuantity = parseInt(
+                    input.value || 0,
+                    10
+                );
+
+
+                const stock = parseInt(
+                    product.dataset.stock || 0,
+                    10
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Минус
+                |--------------------------------------------------------------------------
+                */
+
+                minusButton.disabled =
+                    currentQuantity <= 0;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Плюс
+                |--------------------------------------------------------------------------
+                */
+
+                plusButton.disabled =
+                    currentQuantity >= stock ||
+                    selectedQuantity >= maxQuantity;
+
+            });
+
+        };
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Обновление всех кнопок
+        |--------------------------------------------------------------------------
+        */
+
+        const updateAllButtons = () => {
+
+            productGroups.forEach(group => {
+
+                updateGroupButtons(group);
+
+            });
+
+        };
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Обновление нижних блоков
+        |--------------------------------------------------------------------------
+        */
+
+        function updateSelectionInfo() {
+
+            if (
+                !selectedItemsContainer ||
+                !remainingItemsContainer ||
+                !selectedSeedsContainer
+            ) {
+                return;
+            }
+
+
+            const selection =
+                getCurrentSelection();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ВЫ ВЫБРАЛИ
+            |--------------------------------------------------------------------------
+            */
+
+            selectedItemsContainer.innerHTML = '';
+
+
+            const selectedByBrand = {};
+
+
+            selection.forEach(item => {
+
+                if (!selectedByBrand[item.brandId]) {
+
+                    selectedByBrand[item.brandId] = {
+
+                        brandName: item.brandName,
+
+                        quantity: 0
+
+                    };
+
+                }
+
+
+                selectedByBrand[item.brandId].quantity +=
+                    item.quantity;
+
+            });
+
+
+            Object.values(selectedByBrand).forEach(item => {
+
+                const element =
+                    document.createElement('div');
+
+                element.className =
+                    'gift-popup__selection-item';
+
+                element.innerHTML = `
+
+                    <span class="gift-popup__selection-item-name">
+                        ${item.brandName}
+                    </span>
+
+                    <span class="gift-popup__selection-item-count">
+                        ${item.quantity} шт.
+                    </span>
+
+                `;
+
+                selectedItemsContainer.appendChild(
+                    element
+                );
+
+            });
+
+
+            if (selection.length === 0) {
+
+                selectedItemsContainer.innerHTML = `
+
+                    <div class="gift-popup__selection-item">
+
+                        <span class="gift-popup__selection-item-name">
+                            Пока ничего не выбрано
+                        </span>
+
+                        <span class="gift-popup__selection-item-count">
+                            0 шт.
+                        </span>
+
+                    </div>
+
+                `;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ВАМ ОСТАЛОСЬ ВЫБРАТЬ
+            |--------------------------------------------------------------------------
+            */
+
+            remainingItemsContainer.innerHTML = '';
+
+
+            productGroups.forEach(group => {
+
+                const maxQuantity = parseInt(
+                    group.dataset.quantity || 0,
+                    10
+                );
+
+
+                const selectedQuantity =
+                    getGroupSelectedQuantity(group);
+
+
+                const remaining =
+                    Math.max(
+                        maxQuantity - selectedQuantity,
+                        0
+                    );
+
+
+                if (remaining <= 0) {
+                    return;
+                }
+
+
+                const categoryButton =
+                    popupOverlay.querySelector(
+                        `.gift-popup__category[data-brand-id="${group.dataset.brandId}"]`
+                    );
+
+
+                const brandName =
+                    categoryButton
+                        ?.querySelector('span')
+                        ?.textContent
+                        .trim() || 'Категория';
+
+
+                const element =
+                    document.createElement('div');
+
+
+                element.className =
+                    'gift-popup__selection-item';
+
+
+                element.innerHTML = `
+
+                    <span class="gift-popup__selection-item-name">
+                        ${brandName}
+                    </span>
+
+                    <span class="gift-popup__selection-item-count">
+                        ${remaining} шт.
+                    </span>
+
+                `;
+
+
+                remainingItemsContainer.appendChild(
+                    element
+                );
+
+            });
+
+
+            if (!remainingItemsContainer.children.length) {
+
+                remainingItemsContainer.innerHTML = `
+
+                    <div class="gift-popup__selection-item">
+
+                        <span class="gift-popup__selection-item-name">
+                            Всё выбрано
+                        </span>
+
+                        <span class="gift-popup__selection-item-count">
+                            0 шт.
+                        </span>
+
+                    </div>
+
+                `;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ВЫБРАННЫЕ СЕМЕНА
+            |--------------------------------------------------------------------------
+            */
+
+            selectedSeedsContainer.innerHTML = '';
+
+
+            selection.forEach(item => {
+
+                const element =
+                    document.createElement('div');
+
+
+                element.className =
+                    'gift-popup__seed';
+
+
+                element.innerHTML = `
+
+                    <div class="gift-popup__seed-title">
+                        ${item.name}
+                    </div>
+
+                    <div class="gift-popup__seed-name">
+                        ${item.manufacturer}
+                    </div>
+
+                    <div class="gift-popup__seed-count">
+                        ${item.quantity} шт.
+                    </div>
+
+                `;
+
+
+                selectedSeedsContainer.appendChild(
+                    element
+                );
+
+            });
+
+
+            if (selection.length === 0) {
+
+                selectedSeedsContainer.innerHTML = `
+
+                    <div class="gift-popup__seed">
+
+                        <div class="gift-popup__seed-title">
+                            Выберите бонусные семена
+                        </div>
+
+                        <div class="gift-popup__seed-name">
+                            Пока ничего не выбрано
+                        </div>
+
+                        <div class="gift-popup__seed-count">
+                            0 шт.
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+
+        }
+
+
+        resetButton?.addEventListener('click', function () {
+
+            productGroups.forEach(group => {
+
+                group.querySelectorAll(
+                    '.gift-product__quantity-input'
+                ).forEach(input => {
+                    input.value = 0;
+                });
+
+            });
+
+            updateAllButtons();
+            updateSelectionInfo();
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | + / -
+        |--------------------------------------------------------------------------
+        */
+
+        productGroups.forEach(group => {
+
+            const products =
+                group.querySelectorAll('.gift-product');
+
+
+            products.forEach(product => {
+
+                const minusButton =
+                    product.querySelector(
+                        '.gift-product__quantity-minus'
+                    );
+
+                const plusButton =
+                    product.querySelector(
+                        '.gift-product__quantity-plus'
+                    );
+
+                const input =
+                    product.querySelector(
+                        '.gift-product__quantity-input'
+                    );
+
+
+                if (
+                    !minusButton ||
+                    !plusButton ||
+                    !input
+                ) {
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | +
+                |--------------------------------------------------------------------------
+                */
+
+                plusButton.onclick = function () {
+
+                    const currentQuantity =
+                        parseInt(
+                            input.value || 0,
+                            10
+                        );
+
+
+                    const selectedQuantity =
+                        getGroupSelectedQuantity(group);
+
+
+                    const maxQuantity =
+                        parseInt(
+                            group.dataset.quantity || 0,
+                            10
+                        );
+
+
+                    const stock =
+                        parseInt(
+                            product.dataset.stock || 0,
+                            10
+                        );
+
+
+                    if (
+                        selectedQuantity >=
+                        maxQuantity
+                    ) {
+                        return;
+                    }
+
+
+                    if (
+                        currentQuantity >=
+                        stock
+                    ) {
+                        return;
+                    }
+
+
+                    input.value =
+                        currentQuantity + 1;
+
+
+                    updateAllButtons();
+
+                    updateSelectionInfo();
+
+                };
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | -
+                |--------------------------------------------------------------------------
+                */
+
+                minusButton.onclick = function () {
+
+                    const currentQuantity =
+                        parseInt(
+                            input.value || 0,
+                            10
+                        );
+
+
+                    if (currentQuantity <= 0) {
+                        return;
+                    }
+
+
+                    input.value =
+                        currentQuantity - 1;
+
+
+                    updateAllButtons();
+
+                    updateSelectionInfo();
+
+                };
+
+            });
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Первоначальное состояние
+        |--------------------------------------------------------------------------
+        */
+
+        updateAllButtons();
+
+        updateSelectionInfo();
+
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Первый запуск
+    |--------------------------------------------------------------------------
+    */
+
+    initGiftPopup();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Повторная инициализация после Livewire
+    |--------------------------------------------------------------------------
+    */
+
+    Livewire.hook('morph.updated', () => {
+
+        initGiftPopup();
+
+    });
+
+</script>
+@endscript

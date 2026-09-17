@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\ProductVariant;
+use App\Services\BonusService;
 use App\Services\CartService;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -14,6 +15,8 @@ class CartPage extends Component
     public int|float $cartTotal = 0;
 
     public int $cartCount = 0;
+
+    public array $bonuses = [];
 
     public function mount(CartService $cart): void
     {
@@ -31,6 +34,8 @@ class CartPage extends Component
         $this->cart = $cart->get();
         $this->cartTotal = $cart->total();
         $this->cartCount = $cart->count();
+
+        $this->bonuses = app(BonusService::class)->calculate($this->cart);
     }
 
     public function increment(int $variantId, CartService $cart): void

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -39,5 +40,13 @@ class Brand extends Model
                 $brand->slug = Str::slug($brand->name);
             }
         });
+    }
+
+    public function bonusProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            BonusProduct::class,
+            'bonus_product_brand'
+        );
     }
 }

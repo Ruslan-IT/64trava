@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\ProductVariant;
+use App\Services\BonusService;
 use App\Services\CartService;
 use App\Services\OrderExcelService;
 use App\Services\TelegramService;
@@ -14,7 +15,7 @@ class CheckoutController extends Controller
     /**
      * Страница оформления заказа.
      */
-    public function index(CartService $cartService)
+    public function index(CartService $cartService,  BonusService $bonusService)
     {
         $cart = $cartService->get();
 
@@ -58,6 +59,8 @@ class CheckoutController extends Controller
 
                 'product_name' => $variant->product->name,
 
+                'manufacturer' => $variant->product->brand?->name ?? '',
+
                 'variant_name' => $variant->name,
 
                 'sku' => $item['sku'],
@@ -69,16 +72,23 @@ class CheckoutController extends Controller
                 'total' => $itemTotal,
 
                 'image' => $variant->product->image,
+
+                'brand_id' => $variant->product->brand_id,
             ];
 
 
 
         }
 
+        //$bonuses = $bonusService->calculate($items, $total);
+
+        $bonuses = $bonusService->calculate($cart);
+
         return view('checkout.index', compact(
             'categories',
             'items',
-            'total'
+            'total',
+            'bonuses'
         ));
     }
 
@@ -121,6 +131,8 @@ class CheckoutController extends Controller
         if (empty($cart)) {
             return redirect()->route('cart.index');
         }
+
+        $bonuses = session('bonuses', []);
 
         /*
         |--------------------------------------------------------------------------
@@ -181,6 +193,8 @@ class CheckoutController extends Controller
 
                 'product_name' => $variant->product->name,
 
+                'manufacturer' => $variant->product->brand?->name ?? '',
+
                 'variant_name' => $variant->name,
 
                 'sku' => $item['sku'],
@@ -192,6 +206,8 @@ class CheckoutController extends Controller
                 'total' => $itemTotal,
 
                 'image' => $variant->product->image,
+
+                'brand_id' => $variant->product->brand_id,
             ];
         }
 
@@ -261,6 +277,8 @@ class CheckoutController extends Controller
 
             'discount' => $discount,
 
+            'bonuses' => $bonuses,
+
             'delivery' => $delivery,
 
             'total' => $total,
@@ -274,6 +292,8 @@ class CheckoutController extends Controller
         */
 
         $orderExcelService->save($orderData);
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -317,6 +337,10 @@ class CheckoutController extends Controller
 
                 $telegramMessage .= "• {$item['product_name']}";
 
+                if (!empty($item['manufacturer'])) {
+                    $telegramMessage .= " — {$item['manufacturer']}";
+                }
+
                 if (!empty($item['variant_name'])) {
                     $telegramMessage .= " — {$item['variant_name']}";
                 }
@@ -332,6 +356,22 @@ class CheckoutController extends Controller
                     . " ₽ = "
                     . number_format($item['total'], 0, '.', ' ')
                     . " ₽\n";
+            }
+
+            if (!empty($orderData['bonuses'])) {
+
+                $telegramMessage .= "\n🎁 Бонусные семена:\n";
+
+                foreach ($orderData['bonuses'] as $bonus) {
+
+                    $telegramMessage .= "• {$bonus['name']}";
+
+                    if (!empty($bonus['manufacturer'])) {
+                        $telegramMessage .= " — {$bonus['manufacturer']}";
+                    }
+
+                    $telegramMessage .= " — {$bonus['quantity']} шт.\n";
+                }
             }
 
             $telegramMessage .= "\n";

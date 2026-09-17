@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Brand;
@@ -131,6 +132,11 @@ class Product extends Model
             'Австралия' => 'au.svg',
             default => 'default.svg',
         };
+    }
+
+    public function bonusProduct(): HasOne
+    {
+        return $this->hasOne(BonusProduct::class);
     }
 
 

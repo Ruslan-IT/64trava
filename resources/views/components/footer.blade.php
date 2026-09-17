@@ -108,6 +108,9 @@
 </footer>
 
 
+
+
+
 @livewire('cart-popup')
 
 

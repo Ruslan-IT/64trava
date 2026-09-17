@@ -9,6 +9,7 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SeedbanksController;
+use App\Services\BonusService;
 use App\Services\TelegramService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -27,7 +28,7 @@ Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
 
 
-Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
+Route::get('/catalogs', [CatalogController::class, 'index'])->name('catalog.index');
 
 Route::get('/catalog/{category}', [CatalogController::class, 'index'])->name('catalog.category');
 
@@ -97,6 +98,40 @@ Route::get('/cart-2', function () {return view('cart-2');});
 Route::get('/test-cart', function () {
     dd(session()->get('cart', []));
 });
+
+
+
+Route::get('/bonus-test', function (BonusService $bonusService) {
+    $cart = session('cart', []);
+
+    return response()->json(
+        $bonusService->calculate($cart)
+    );
+
+
+
+});
+
+
+Route::post('/cart/bonuses', function (\Illuminate\Http\Request $request) {
+    session()->put('bonuses', $request->input('bonuses', []));
+
+    return response()->json([
+        'success' => true,
+    ]);
+})->name('cart.bonuses');
+
+
+Route::get('/clear-cart', function () {
+    session()->forget('cart');
+
+    return redirect('/cart');
+});
+
+
+
+
+
 
 
 Route::get('/telegram-test', function () {

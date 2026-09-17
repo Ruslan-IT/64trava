@@ -29,8 +29,12 @@ class OrderExcelService
         $itemsSheet = $spreadsheet->createSheet();
         $itemsSheet->setTitle('Товары');
 
+        $bonusesSheet = $spreadsheet->createSheet();
+        $bonusesSheet->setTitle('Бонусы');
+
         $this->createOrderSheet($ordersSheet, $order);
         $this->createItemsSheet($itemsSheet, $order);
+        $this->createBonusesSheet($bonusesSheet, $order);
 
         $date = now()->format('d.m.Y');
 
@@ -79,6 +83,7 @@ class OrderExcelService
             'Заказ',
             'Фото',
             'Товар',
+            'Производитель',
             'Вариант',
             'SKU',
             'Количество',
@@ -86,7 +91,7 @@ class OrderExcelService
             'Сумма',
         ]], null, 'A1');
 
-        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
 
         $row = 2;
 
@@ -96,6 +101,7 @@ class OrderExcelService
                 $order['number'],
                 $item['image'] ?? '',
                 $item['product_name'],
+                $item['manufacturer'] ?? '',
                 $item['variant_name'],
                 $item['sku'],
                 $item['quantity'],
@@ -131,10 +137,11 @@ class OrderExcelService
         $sheet->getColumnDimension('B')->setWidth(15);
         $sheet->getColumnDimension('C')->setWidth(35);
         $sheet->getColumnDimension('D')->setWidth(25);
-        $sheet->getColumnDimension('E')->setWidth(20);
-        $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(25);
+        $sheet->getColumnDimension('F')->setWidth(20);
         $sheet->getColumnDimension('G')->setWidth(15);
         $sheet->getColumnDimension('H')->setWidth(15);
+        $sheet->getColumnDimension('I')->setWidth(15);
     }
 
     private function getImagePath(?string $image): ?string
@@ -152,6 +159,46 @@ class OrderExcelService
         $path = storage_path('app/public/' . $image);
 
         return file_exists($path) ? $path : null;
+    }
+
+    private function createBonusesSheet($sheet, array $order): void
+    {
+        $sheet->fromArray([[
+            'Заказ',
+            'Бренд',
+            'Товар',
+            'Производитель',
+            'Количество',
+            'Product ID',
+            'Bonus Product ID',
+        ]], null, 'A1');
+
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+
+        $row = 2;
+
+        foreach ($order['bonuses'] ?? [] as $bonus) {
+
+            $sheet->fromArray([[
+                $order['number'],
+                $bonus['brandName'] ?? '',
+                $bonus['name'] ?? '',
+                $bonus['manufacturer'] ?? '',
+                $bonus['quantity'] ?? 0,
+                $bonus['productId'] ?? '',
+                $bonus['bonusProductId'] ?? '',
+            ]], null, 'A' . $row);
+
+            $row++;
+        }
+
+        $sheet->getColumnDimension('A')->setWidth(25);
+        $sheet->getColumnDimension('B')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(35);
+        $sheet->getColumnDimension('D')->setWidth(25);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getColumnDimension('G')->setWidth(20);
     }
 
     public function all(): array

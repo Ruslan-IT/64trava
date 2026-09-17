@@ -72,6 +72,13 @@
     >
         @csrf
 
+        <input
+            type="hidden"
+            name="bonuses"
+            id="giftBonuses"
+            value="[]"
+        >
+
         <div class="container">
 
             <!-- Заголовок -->
