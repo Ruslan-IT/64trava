@@ -244,9 +244,12 @@
 
 
 
+
                     @foreach($newProducts as $product)
                         @include('components.product-card', ['product' => $product, 'livewireKey' => 'new-' . $product->id,])
                     @endforeach
+
+
 
                 </div>
 
@@ -340,6 +343,7 @@
                     <div class="new-products-row">
 
                         <div class="catalog-products-home">
+
 
 
 

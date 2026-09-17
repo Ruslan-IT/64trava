@@ -2,11 +2,19 @@
 
     <div class="product-image-wrapper">
 
-        <img
-            src="{{ asset('storage/' . $product->image) }}"
-            alt="Sunshine"
-            class="product-image"
-        >
+        @if($product->image)
+            <img
+                src="{{ asset('storage/' . $product->image) }}"
+                alt="{{ $product->name }}"
+                class="product-image"
+            >
+        @else
+            <img
+                src="{{ asset('images/no-img2.png') }}"
+                alt="Нет изображения"
+                class="product-image"
+            >
+        @endif
 
         <div class="product-labels">
 

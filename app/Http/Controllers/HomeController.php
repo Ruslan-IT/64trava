@@ -29,7 +29,7 @@ class HomeController
             ->get();
 
         $productPopular = Product::whereHas('categories', function ($query) {
-            $query->where('id', 6);//популярные
+            $query->where('id', 11);//популярные
         })
             ->get()
             ->take(4);
