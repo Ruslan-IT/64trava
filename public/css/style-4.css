@@ -742,8 +742,9 @@ input, button {
 .category-buttons-inner {
     width: 100%;
     display: flex;
-    justify-content: space-between;
     gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 
@@ -4771,6 +4772,11 @@ input, button {
     width: 100%;
     overflow: hidden;
     margin: 0 0 100px 0;
+}
+
+.products-slider-viewport {
+    width: 100%;
+    overflow: hidden;
 }
 
 .products-grid {

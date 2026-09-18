@@ -202,6 +202,8 @@
 
             <div class="container">
 
+                <div class="products-slider-viewport">
+
                 <div class="products-grid">
 
                     {{-- =========================
@@ -249,6 +251,9 @@
                         @include('components.product-card', ['product' => $product, 'livewireKey' => 'new-' . $product->id,])
                     @endforeach
 
+
+
+                </div>
 
 
                 </div>

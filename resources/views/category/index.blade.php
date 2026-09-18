@@ -66,32 +66,35 @@
 
                                 <div class="catalog-welcome-image">
 
-                                    @if($brand)
+                                    @if($brand && $brand->logo)
 
                                         <img
                                             src="{{ asset('storage/' . $brand->logo) }}"
                                             alt="{{ $brand->name }}"
                                         >
 
-                                    @elseif($currentCategory)
+                                    @elseif($currentCategory && $currentCategory->image)
 
                                         <img
                                             src="{{ asset('storage/' . $currentCategory->image) }}"
                                             alt="{{ $currentCategory->name }}"
                                         >
 
-                                    @elseif($tag)
+                                    @elseif($tag && $tag->image)
 
-                                        {{-- Если у тега есть image --}}
-                                        @if($tag->image)
-                                            <img
-                                                src="{{ asset('storage/' . $tag->image) }}"
-                                                alt="{{ $tag->name }}"
-                                            >
-                                        @endif
+                                        <img
+                                            src="{{ asset('storage/' . $tag->image) }}"
+                                            alt="{{ $tag->name }}"
+                                        >
+
+                                    @else
+
+                                        <img
+                                            src="{{ asset('images/no-img2.png') }}"
+                                            alt="Изображение отсутствует"
+                                        >
 
                                     @endif
-
 
                                 </div>
 
@@ -104,7 +107,7 @@
                                     </div>
 
                                     <div class="catalog-welcome-text">
-                                        {{ $catalogInfo->description }}
+                                        {!! $catalogInfo->description !!}
                                     </div>
 
                                     <a href="#" class="catalog-welcome-more">
