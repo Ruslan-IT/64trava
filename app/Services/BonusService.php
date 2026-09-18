@@ -7,18 +7,15 @@ use App\Models\ProductVariant;
 
 class BonusService
 {
-    /**
-     * Рассчитать доступные бонусы для текущей корзины.
-     *
-     * @param array $cart
-     * @return array
-     */
     public function calculate(array $cart): array
     {
         if (empty($cart)) {
             return [];
         }
 
+        /*
+         * Получаем варианты товаров из корзины.
+         */
         $variantIds = array_keys($cart);
 
         $variants = ProductVariant::query()
@@ -27,7 +24,27 @@ class BonusService
             ->get()
             ->keyBy('id');
 
+        /*
+         * Общая сумма заказа.
+         */
         $orderTotal = 0;
+
+        /*
+         * Сколько денег потрачено на каждый бренд.
+         *
+         * Например:
+         *
+         * [
+         *     2 => 5000,
+         *     5 => 3200,
+         *     8 => 7000,
+         * ]
+         */
+        $purchasedBrandTotals = [];
+
+        /*
+         * ID брендов, которые покупались.
+         */
         $purchasedBrandIds = [];
 
         foreach ($cart as $variantId => $item) {
@@ -40,19 +57,50 @@ class BonusService
             $quantity = (int) ($item['quantity'] ?? 0);
             $price = (float) ($item['price'] ?? 0);
 
-            $orderTotal += $price * $quantity;
-
-            if ($variant->product->brand_id) {
-                $purchasedBrandIds[] = (int) $variant->product->brand_id;
+            if ($quantity <= 0 || $price < 0) {
+                continue;
             }
+
+            $itemTotal = $price * $quantity;
+
+            /*
+             * Общая сумма заказа.
+             */
+            $orderTotal += $itemTotal;
+
+            /*
+             * Бренд товара.
+             */
+            $brandId = (int) ($variant->product->brand_id ?? 0);
+
+            if ($brandId <= 0) {
+                continue;
+            }
+
+            $purchasedBrandIds[] = $brandId;
+
+            /*
+             * Суммируем стоимость покупок отдельно
+             * по каждому бренду.
+             */
+            if (!isset($purchasedBrandTotals[$brandId])) {
+                $purchasedBrandTotals[$brandId] = 0;
+            }
+
+            $purchasedBrandTotals[$brandId] += $itemTotal;
         }
 
-        $purchasedBrandIds = array_unique($purchasedBrandIds);
+        $purchasedBrandIds = array_values(
+            array_unique($purchasedBrandIds)
+        );
 
         if ($orderTotal <= 0) {
             return [];
         }
 
+        /*
+         * Получаем доступные бонусные товары.
+         */
         $bonusProducts = BonusProduct::query()
             ->with([
                 'product.brand',
@@ -72,38 +120,110 @@ class BonusService
                 continue;
             }
 
-            $brandId = (int) $product->brand_id;
+            $bonusBrandId = (int) $product->brand_id;
 
             /*
-             * Dutch Bulk доступен всегда.
+             * Сумма, от которой будем рассчитывать бонус.
              */
-            $isDutchBulk = $brandId === 2;
+            $bonusCalculationTotal = 0;
 
             /*
-             * Для остальных брендов проверяем,
-             * покупал ли клиент разрешённый бренд.
+             * =====================================================
+             * DUTCH BULK
+             * =====================================================
+             *
+             * Dutch Bulk (brand_id = 2) доступен всегда.
+             *
+             * Для него сохраняем существующую логику:
+             * количество бонусов считается от всей суммы заказа.
              */
-            if (!$isDutchBulk) {
+            $isDutchBulk = $bonusBrandId === 2;
+
+            if ($isDutchBulk) {
+                $bonusCalculationTotal = $orderTotal;
+            } else {
+                /*
+                 * =================================================
+                 * ОСТАЛЬНЫЕ БРЕНДЫ
+                 * =================================================
+                 *
+                 * Получаем бренды, при покупке которых разрешён
+                 * данный бонусный товар.
+                 */
                 $allowedBrandIds = $bonusProduct->brands
                     ->pluck('id')
                     ->map(fn ($id) => (int) $id)
+                    ->filter(fn ($id) => $id > 0)
+                    ->unique()
+                    ->values()
                     ->toArray();
 
+                /*
+                 * Если для бонуса не указаны разрешённые бренды,
+                 * бонус не показываем.
+                 */
+                if (empty($allowedBrandIds)) {
+                    continue;
+                }
+
+                /*
+                 * Проверяем, покупал ли клиент хотя бы один
+                 * разрешённый бренд.
+                 */
                 $isAllowed = !empty(
-                array_intersect($purchasedBrandIds, $allowedBrandIds)
+                array_intersect(
+                    $purchasedBrandIds,
+                    $allowedBrandIds
+                )
                 );
 
                 if (!$isAllowed) {
                     continue;
                 }
+
+                /*
+                 * ВАЖНО:
+                 *
+                 * Теперь считаем сумму только по разрешённым
+                 * брендам, а не по всей корзине.
+                 *
+                 * Например:
+                 *
+                 * Barneys Farm = 3000 ₽
+                 * Dutch Bulk   = 5000 ₽
+                 *
+                 * Для бонуса Barneys Farm:
+                 *
+                 * $bonusCalculationTotal = 3000 ₽
+                 *
+                 * а не 8000 ₽.
+                 */
+                foreach ($allowedBrandIds as $allowedBrandId) {
+                    $bonusCalculationTotal +=
+                        $purchasedBrandTotals[$allowedBrandId] ?? 0;
+                }
             }
 
             /*
-             * Сколько бонусов положено по этому правилу.
+             * Если сумма недостаточная для получения хотя бы
+             * одного бонуса — пропускаем товар.
+             */
+            $threshold = (int) $bonusProduct->threshold;
+
+            if ($threshold <= 0 || $bonusCalculationTotal <= 0) {
+                continue;
+            }
+
+            /*
+             * Сколько бонусных семян положено.
+             *
+             * 4000 / 4000 = 1
+             * 8000 / 4000 = 2
+             * 3999 / 4000 = 0
              */
             $quantity = intdiv(
-                (int) floor($orderTotal),
-                (int) $bonusProduct->threshold
+                (int) floor($bonusCalculationTotal),
+                $threshold
             );
 
             if ($quantity <= 0) {
@@ -111,8 +231,8 @@ class BonusService
             }
 
             /*
-             * Ограничиваем количество доступным остатком
-             * конкретного бонусного товара.
+             * Нельзя выдать больше бонусных семян,
+             * чем есть на складе.
              */
             $quantity = min(
                 $quantity,
@@ -126,41 +246,40 @@ class BonusService
             /*
              * Создаём группу бренда только один раз.
              */
-            if (!isset($result[$brandId])) {
-                $result[$brandId] = [
-                    'brand_id' => $brandId,
+            if (!isset($result[$bonusBrandId])) {
+                $result[$bonusBrandId] = [
+                    'brand_id' => $bonusBrandId,
                     'brand_name' => $product->brand->name,
 
-                    // Общее количество бонусов категории.
+                    /*
+                     * Общее количество бонусов этой группы.
+                     */
                     'quantity' => $quantity,
 
                     'products' => [],
                 ];
             } else {
                 /*
-                 * Если в одной категории несколько бонусных товаров,
-                 * количество не дублируем.
+                 * Если в одной группе несколько бонусных товаров,
+                 * не увеличиваем количество бонусов.
                  *
-                 * Пока берём максимальное доступное количество.
+                 * Берём максимальное доступное количество.
                  */
-                $result[$brandId]['quantity'] = max(
-                    $result[$brandId]['quantity'],
+                $result[$bonusBrandId]['quantity'] = max(
+                    $result[$bonusBrandId]['quantity'],
                     $quantity
                 );
             }
 
             /*
-             * В товаре больше НЕ передаём quantity.
-             *
-             * Товар — это вариант, который клиент может выбрать
-             * для распределения общего количества бонусов категории.
+             * Добавляем бонусный товар в группу.
              */
-            $result[$brandId]['products'][] = [
+            $result[$bonusBrandId]['products'][] = [
                 'bonus_product_id' => $bonusProduct->id,
                 'product_id' => $product->id,
                 'name' => $product->name,
                 'stock' => (int) $bonusProduct->stock,
-                'threshold' => (int) $bonusProduct->threshold,
+                'threshold' => $threshold,
                 'sort_order' => (int) $bonusProduct->sort_order,
             ];
         }
@@ -183,9 +302,43 @@ class BonusService
             );
         });
 
+       /* dd(
+            $bonusProducts
+                ->filter(fn ($bonusProduct) =>
+                    (int) ($bonusProduct->product?->brand_id ?? 0) === 1
+                )
+                ->map(function ($bonusProduct) {
+                    return [
+                        'bonus_product_id' => $bonusProduct->id,
+                        'product' => $bonusProduct->product?->name,
+                        'brand' => $bonusProduct->product?->brand?->name,
+                        'brand_id' => $bonusProduct->product?->brand_id,
+                        'threshold' => $bonusProduct->threshold,
+                        'stock' => $bonusProduct->stock,
+                    ];
+                })
+                ->values()
+                ->toArray()
+        );*/
+
         return [
             'order_total' => $orderTotal,
+
+            /*
+             * ID брендов, которые покупались.
+             */
             'purchased_brand_ids' => $purchasedBrandIds,
+
+            /*
+             * Сумма покупок по каждому бренду.
+             *
+             * Это также удобно для проверки и отладки.
+             */
+            'purchased_brand_totals' => $purchasedBrandTotals,
+
+            /*
+             * Доступные бонусы.
+             */
             'groups' => array_values($result),
         ];
     }

@@ -25,8 +25,12 @@ class BonusProductsTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('stock')
+                /*TextColumn::make('stock')
                     ->label('Остаток')
+                    ->sortable(),*/
+
+                TextColumn::make('threshold')
+                    ->label('За каждые* бонус 1с')
                     ->sortable(),
 
                 IconColumn::make('is_active')
