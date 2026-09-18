@@ -266,9 +266,10 @@
         <!-- =========================
         Новости
        ========================= -->
-        <section class="news news-slider">
+        <div class="container">
+            <section class="news news-slider">
 
-            <div class="container">
+
                 <div class="news-header">
                     <h2>Новости</h2>
 
@@ -314,9 +315,11 @@
 
 
                 </div>
-            </div>
 
-        </section>
+
+            </section>
+        </div>
+
 
         <!-- =========================
          Каталог
