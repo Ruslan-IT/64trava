@@ -58,7 +58,7 @@
             <div class="catalog-categories-grid">
 
                 @foreach($seedbanks as $seedbank)
-                    <a href="#" class="catalog-category">
+                    <a href="{{ route('catalog.brand', $seedbank->slug ) }}" class="catalog-category">
 
                         <img src="{{  asset('storage/' . $seedbank->logo)  }}" alt="">
 

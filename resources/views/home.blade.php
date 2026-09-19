@@ -50,48 +50,94 @@
 
         </section>
 
-        <section class="hero-banner">
-            <picture>
-                <source
-                    media="(max-width: 768px)"
-                    srcset="{{ asset('images/banner-mobile-2.jpg') }}"
-                >
+        @php
+            $heroBanners = \App\Models\HeroBanner::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        @endphp
 
-                <img
-                    src="{{ asset('images/banner-desktop.jpg') }}"
-                    alt="Amnesia Lemon"
-                >
-            </picture>
-            <div class="container">
+        @if($heroBanners->isNotEmpty())
 
+            <section class="main-slider" data-main-slider>
 
-                <!-- Текст только для desktop -->
+                <div class="main-slider__track">
 
+                    @foreach($heroBanners as $index => $banner)
 
-                <div class="hero-banner-content">
+                        <article
+                            class="main-slider__slide {{ $index === 0 ? 'is-active' : '' }}"
+                            data-duration="{{ $banner->duration }}"
+                        >
 
-                    <div class="hero-label">
-                        Бестселлер
-                    </div>
+                            <picture class="main-slider__picture">
 
+                                <source
+                                    media="(max-width: 768px)"
+                                    srcset="{{ asset('storage/' . $banner->mobile_image) }}"
+                                >
 
-                    <h1 class="hero-title">
-                        <p class="hero-title-new">NEW</p>
-                        <p class="hero-title-releases">releases</p>
-                    </h1>
+                                <img
+                                    class="main-slider__image"
+                                    src="{{ asset('storage/' . $banner->desktop_image) }}"
+                                    alt="{{ $banner->title_new ?: 'Баннер' }}"
+                                >
 
+                            </picture>
 
-                    <p class="hero-description">
-                        Amnesia Lemon — это сорт, созданный совместными
-                        усилиями селекционеров Barneys Farm и Soma,
-                        выигравшей Кубок Каннабиса в 2004 году.
-                    </p>
+                           {{-- <div class="main-slider__content-wrap">
+
+                                <div class="container">
+
+                                    <div class="main-slider__content">
+
+                                        @if($banner->label)
+                                            <div class="hero-label">
+                                                {{ $banner->label }}
+                                            </div>
+                                        @endif
+
+                                        @if($banner->title_new || $banner->title_releases)
+
+                                            <h1 class="hero-title">
+
+                                                @if($banner->title_new)
+                                                    <span class="hero-title-new">
+                                                {{ $banner->title_new }}
+                                            </span>
+                                                @endif
+
+                                                @if($banner->title_releases)
+                                                    <span class="hero-title-releases">
+                                                {{ $banner->title_releases }}
+                                            </span>
+                                                @endif
+
+                                            </h1>
+
+                                        @endif
+
+                                        @if($banner->description)
+                                            <p class="hero-description">
+                                                {{ $banner->description }}
+                                            </p>
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+                            </div>--}}
+
+                        </article>
+
+                    @endforeach
 
                 </div>
-            </div>
 
+            </section>
 
-        </section>
+        @endif
 
         <section class="tags-section">
 
@@ -1465,6 +1511,227 @@
             });
         });
 
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const slider = document.querySelector('[data-main-slider]');
+
+            if (!slider) {
+                return;
+            }
+
+            const slides = Array.from(
+                slider.querySelectorAll('.main-slider__slide')
+            );
+
+            if (slides.length === 0) {
+                return;
+            }
+
+            if (slides.length === 1) {
+                return;
+            }
+
+
+            let currentIndex = 0;
+
+            let timer = null;
+
+            let startX = 0;
+            let startY = 0;
+
+            let isTouching = false;
+
+
+            /*
+             * Показываем слайд
+             */
+            function showSlide(index) {
+
+                if (index < 0) {
+                    index = slides.length - 1;
+                }
+
+                if (index >= slides.length) {
+                    index = 0;
+                }
+
+                slides.forEach(function (slide, i) {
+
+                    slide.classList.toggle(
+                        'is-active',
+                        i === index
+                    );
+
+                });
+
+                currentIndex = index;
+            }
+
+
+            /*
+             * Запускаем таймер
+             */
+            function startTimer() {
+
+                clearTimeout(timer);
+
+                const currentSlide = slides[currentIndex];
+
+                let duration = parseInt(
+                    currentSlide.dataset.duration,
+                    10
+                );
+
+                if (!duration || duration < 1) {
+                    duration = 5;
+                }
+
+                timer = setTimeout(function () {
+
+                    showSlide(currentIndex + 1);
+
+                    startTimer();
+
+                }, duration * 1000);
+            }
+
+
+            /*
+             * Следующий слайд
+             */
+            function nextSlide() {
+
+                showSlide(currentIndex + 1);
+
+                startTimer();
+            }
+
+
+            /*
+             * Предыдущий слайд
+             */
+            function previousSlide() {
+
+                showSlide(currentIndex - 1);
+
+                startTimer();
+            }
+
+
+            /*
+             * TOUCH START
+             */
+            slider.addEventListener(
+                'touchstart',
+                function (event) {
+
+                    if (!event.touches.length) {
+                        return;
+                    }
+
+                    const touch = event.touches[0];
+
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+
+                    isTouching = true;
+
+                    clearTimeout(timer);
+
+                },
+                {
+                    passive: true
+                }
+            );
+
+
+            /*
+             * TOUCH END
+             */
+            slider.addEventListener(
+                'touchend',
+                function (event) {
+
+                    if (!isTouching) {
+                        return;
+                    }
+
+                    isTouching = false;
+
+                    if (!event.changedTouches.length) {
+                        startTimer();
+                        return;
+                    }
+
+                    const touch = event.changedTouches[0];
+
+                    const endX = touch.clientX;
+                    const endY = touch.clientY;
+
+                    const diffX = endX - startX;
+                    const diffY = endY - startY;
+
+
+                    /*
+                     * Вертикальный жест —
+                     * обычная прокрутка страницы.
+                     */
+                    if (Math.abs(diffY) > Math.abs(diffX)) {
+
+                        startTimer();
+
+                        return;
+                    }
+
+
+                    /*
+                     * Слишком маленькое движение —
+                     * не считаем свайпом.
+                     */
+                    if (Math.abs(diffX) < 50) {
+
+                        startTimer();
+
+                        return;
+                    }
+
+
+                    /*
+                     * Свайп влево
+                     */
+                    if (diffX < 0) {
+
+                        nextSlide();
+
+                    }
+                    /*
+                     * Свайп вправо
+                     */
+                    else {
+
+                        previousSlide();
+
+                    }
+
+                },
+                {
+                    passive: true
+                }
+            );
+
+
+            /*
+             * Начальное состояние
+             */
+            showSlide(0);
+
+            startTimer();
+
+        });
     </script>
 
 

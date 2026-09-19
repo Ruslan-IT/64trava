@@ -35,6 +35,22 @@ class BrandForm
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true),
+                        TextInput::make('promo_percent')
+                            ->label('Процент промокода')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('%')
+                            ->default(5)
+                            ->required(),
+
+                        TextInput::make('bonus_threshold')
+                            ->label('За каждые')
+                            ->numeric()
+                            ->minValue(1)
+                            ->suffix('₽')
+                            ->required(),
 
                         Textarea::make('description')
                             ->label('Описание')

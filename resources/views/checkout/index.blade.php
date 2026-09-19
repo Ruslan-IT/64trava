@@ -706,40 +706,27 @@
 
 
                         <!-- Скидка -->
-                        @if(($discount ?? 0) > 0)
-
-                            <div class="order-row order-row--discount">
-
-                            <span>
-                                Скидка
+                        <div
+                            class="order-row order-row--discount"
+                            id="promo-discount-row"
+                            style="{{ ($discount ?? 0) > 0 ? '' : 'display: none;' }}"
+                        >
+                            <span>Скидка</span>
+                            <span id="promo-discount">
+                                −{{ number_format($discount ?? 0, 0, ',', ' ') }} ₽
                             </span>
+                        </div>
 
-                                <span>
-                                −{{ number_format($discount, 0, ',', ' ') }} ₽
-                            </span>
-
-                            </div>
-
-                        @endif
-
-
-                        <!-- Итог -->
                         <div class="order-total">
-
-                            <strong>
-                                Итог
-                            </strong>
-
-                            <strong>
+                            <strong>Итог</strong>
+                            <strong id="order-total">
                                 {{ number_format($total ?? 0, 0, ',', ' ') }} ₽
                             </strong>
-
                         </div>
 
 
                         <!-- Промокод -->
                         <div class="promo">
-
                             <input
                                 type="text"
                                 id="promo_code"
@@ -754,8 +741,19 @@
                             >
                                 Применить код
                             </button>
-
                         </div>
+
+                        <div
+                            id="promo-message"
+                            class="checkout-error"
+                            style="display: none; "
+                        ></div>
+
+                        @error('promo_code')
+                        <div class="checkout-error">
+                            {{ $message }}
+                        </div>
+                        @enderror
 
                         @error('promo_code')
                         <div class="checkout-error">
@@ -845,6 +843,110 @@
             });
 
         });
+
+
+
+
+        const applyPromoButton = document.getElementById('apply-promo');
+        const promoInput = document.getElementById('promo_code');
+        const promoMessage = document.getElementById('promo-message');
+
+        if (applyPromoButton && promoInput) {
+            applyPromoButton.addEventListener('click', async function () {
+
+                const code = promoInput.value.trim();
+
+                if (!code) {
+                    if (promoMessage) {
+                        promoMessage.textContent = 'Введите промокод.';
+                        promoMessage.style.display = '';
+                    }
+
+                    return;
+                }
+
+                if (promoMessage) {
+                    promoMessage.textContent = '';
+                    promoMessage.style.display = 'none';
+                }
+
+                applyPromoButton.disabled = true;
+                applyPromoButton.textContent = 'Проверка...';
+
+                try {
+                    const response = await fetch('{{ route('checkout.apply-promo') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            promo_code: code
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Промокод недействителен.');
+                    }
+
+                    console.log('PROMO:', result);
+
+                    // Обновляем скидку
+                    const discountRow = document.getElementById('promo-discount-row');
+                    const discountElement = document.getElementById('promo-discount');
+                    const totalElement = document.getElementById('order-total');
+
+                    const promoAmount = Number(result.amount) || 0;
+
+                    const currentTotalText = totalElement.textContent
+                        .replace(/\s/g, '')
+                        .replace('₽', '')
+                        .replace(',', '.');
+
+                    const currentTotal = Number(currentTotalText) || 0;
+                    const newTotal = Math.max(0, currentTotal - promoAmount);
+
+                    if (discountRow && discountElement) {
+                        discountRow.style.display = '';
+                        discountElement.textContent =
+                            '−' + promoAmount.toLocaleString('ru-RU') + ' ₽';
+                    }
+
+                    if (totalElement) {
+                        totalElement.textContent =
+                            newTotal.toLocaleString('ru-RU') + ' ₽';
+                    }
+
+                    if (promoMessage) {
+                        promoMessage.textContent =
+                            'Промокод применён. Скидка: ' +
+                            promoAmount.toLocaleString('ru-RU') +
+                            ' ₽';
+
+                        promoMessage.style.display = '';
+                    }
+
+                    applyPromoButton.textContent = 'Применён';
+                    promoInput.readOnly = true;
+
+                } catch (error) {
+                    console.error('Ошибка промокода:', error);
+
+                    if (promoMessage) {
+                        promoMessage.textContent =
+                            error.message || 'Не удалось применить промокод.';
+
+                        promoMessage.style.display = '';
+                    }
+
+                    applyPromoButton.disabled = false;
+                    applyPromoButton.textContent = 'Применить код';
+                }
+            });
+        }
     </script>
 
 

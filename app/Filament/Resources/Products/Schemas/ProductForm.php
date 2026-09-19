@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Tag;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -390,6 +391,51 @@ class ProductForm
                     ])
                     ->columns(1)
                     ->columnSpanFull()
+                    ->collapsible(),
+
+
+                /*
+                    |--------------------------------------------------------------------------
+                    | БОНУСНЫЕ НАСТРОЙКИ
+                    |--------------------------------------------------------------------------
+                    */
+
+                Section::make('Бонусные настройки')
+                    ->schema([
+/*
+                        TextInput::make('threshold')
+                            ->label('За каждые')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1)
+                            ->suffix('₽')
+                            ->helperText(
+                                'За каждые указанную сумму заказа клиент получает 1 бонусное семя.'
+                            ),*/
+
+                        CheckboxList::make('brands')
+                            ->label('Доступен при покупке')
+                            ->relationship('brands', 'name')
+                            ->columns(2)
+                            ->searchable()
+                            ->helperText(
+                                'Выберите бренды, при покупке которых этот бонус становится доступен.'
+                            ),
+
+                        TextInput::make('stock')
+                            ->label('Остаток бонусов')
+                            ->numeric()
+                            ->required()
+                            ->default(0)
+                            ->minValue(0),
+
+                        Toggle::make('is_active')
+                            ->label('Бонус доступен')
+                            ->default(true),
+
+                    ])
+                    ->columns(2)
+                    ->relationship('bonusProduct')
                     ->collapsible(),
 
             ]);

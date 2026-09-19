@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\ProductVariant;
+use App\Models\PromoCode;
 use App\Services\BonusService;
 use App\Services\CartService;
 use App\Services\OrderExcelService;
@@ -90,6 +91,62 @@ class CheckoutController extends Controller
             'total',
             'bonuses'
         ));
+    }
+
+    public function applyPromo(Request $request)
+    {
+        $request->validate([
+            'promo_code' => ['required', 'string', 'max:100'],
+        ]);
+
+        $code = trim($request->input('promo_code'));
+
+        $currentPromo = session('promo_code');
+
+        if (
+            is_array($currentPromo) &&
+            !empty($currentPromo['code']) &&
+            strtoupper($currentPromo['code']) === strtoupper($code)
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Этот промокод можно использовать только в следующем заказе.',
+            ], 422);
+        }
+
+        $promoCode = PromoCode::where('code', $code)->first();
+
+        if (!$promoCode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Промокод не найден.',
+            ], 422);
+        }
+
+        if ($promoCode->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Промокод уже использован или недействителен.',
+            ], 422);
+        }
+
+        if ($promoCode->expires_at && $promoCode->expires_at->isPast()) {
+            $promoCode->update([
+                'status' => 'expired',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Срок действия промокода истёк.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'code' => $promoCode->code,
+            'amount' => (float) $promoCode->amount,
+            'message' => 'Промокод применён.',
+        ]);
     }
 
     /**
@@ -218,6 +275,54 @@ class CheckoutController extends Controller
         */
 
         $discount = 0;
+
+        $promoCode = null;
+
+        if (!empty($validated['promo_code'])) {
+
+            $code = trim($validated['promo_code']);
+
+            $currentPromo = session('promo_code');
+
+            $isCurrentPromo = (
+                is_array($currentPromo) &&
+                !empty($currentPromo['code']) &&
+                strtoupper($currentPromo['code']) === strtoupper($code)
+            );
+
+            if (!$isCurrentPromo) {
+
+                $promoCode = PromoCode::where('code', $code)
+                    ->where('status', 'active')
+                    ->first();
+
+                if (!$promoCode) {
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'promo_code' => 'Промокод недействителен или уже использован.',
+                        ]);
+                }
+
+                if ($promoCode->expires_at && $promoCode->expires_at->isPast()) {
+
+                    $promoCode->update([
+                        'status' => 'expired',
+                    ]);
+
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'promo_code' => 'Срок действия промокода истёк.',
+                        ]);
+                }
+
+                $discount = min(
+                    (float) $promoCode->amount,
+                    $subtotal
+                );
+            }
+        }
 
         $delivery = 0;
 
@@ -463,18 +568,14 @@ class CheckoutController extends Controller
                 'message' => $e->getMessage(),
             ]);
         }
+        if ($promoCode) {
+            $promoCode->update([
+                'status' => 'used',
+                'used_at' => now(),
+            ]);
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Очищаем корзину
-        |--------------------------------------------------------------------------
-        */
-
-        $cartService->clear();
-
-
-
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -483,6 +584,8 @@ class CheckoutController extends Controller
         */
 
         $cartService->clear();
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -528,4 +631,7 @@ class CheckoutController extends Controller
 
         return view('order.success', compact('order', 'categories'));
     }
+
+
+
 }

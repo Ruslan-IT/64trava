@@ -19,6 +19,7 @@ class Brand extends Model
         'seo_title',
         'seo_description',
         'seo_keywords',
+        'promo_percent',
     ];
 
     public function products()

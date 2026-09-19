@@ -70,6 +70,12 @@ class CartService
 
         session()->put('cart', $cart);
 
+        // Если корзина стала пустой — очищаем выбор бонусов и промокод
+        if (empty($cart)) {
+            session()->forget('bonuses');
+            session()->forget('promo_code');
+        }
+
         return $cart;
     }
 
@@ -84,6 +90,12 @@ class CartService
 
         session()->put('cart', $cart);
 
+        // Если корзина стала пустой — очищаем выбор бонусов и промокод
+        if (empty($cart)) {
+            session()->forget('bonuses');
+            session()->forget('promo_code');
+        }
+
         return $cart;
     }
 
@@ -93,6 +105,8 @@ class CartService
     public function clear(): void
     {
         session()->forget('cart');
+        session()->forget('bonuses');
+        session()->forget('promo_code');
     }
 
     /**

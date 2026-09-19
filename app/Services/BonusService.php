@@ -198,17 +198,23 @@ class BonusService
                  *
                  * а не 8000 ₽.
                  */
-                foreach ($allowedBrandIds as $allowedBrandId) {
-                    $bonusCalculationTotal +=
-                        $purchasedBrandTotals[$allowedBrandId] ?? 0;
-                }
+
+
+                /*
+                  * Если клиент покупает хотя бы один
+                  * разрешённый бренд, бонус доступен.
+                  *
+                  * Количество бонусов считается
+                  * от всей суммы заказа.
+                  */
+                $bonusCalculationTotal = $orderTotal;
             }
 
             /*
              * Если сумма недостаточная для получения хотя бы
              * одного бонуса — пропускаем товар.
              */
-            $threshold = (int) $bonusProduct->threshold;
+            $threshold = (int) $product->brand->bonus_threshold;
 
             if ($threshold <= 0 || $bonusCalculationTotal <= 0) {
                 continue;

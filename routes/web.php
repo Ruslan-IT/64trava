@@ -10,6 +10,8 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SeedbanksController;
 use App\Services\BonusService;
+use App\Services\CartService;
+use App\Services\PromoCodeService;
 use App\Services\TelegramService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -116,6 +118,10 @@ Route::get('/bonus-test', function (BonusService $bonusService) {
 Route::post('/cart/bonuses', function (\Illuminate\Http\Request $request) {
     session()->put('bonuses', $request->input('bonuses', []));
 
+    // Если клиент выбрал бонусные семена —
+    // ранее выбранный промокод больше не действует в этой корзине.
+    session()->forget('promo_code');
+
     return response()->json([
         'success' => true,
     ]);
@@ -154,9 +160,93 @@ Route::get('/telegram-test', function () {
 
 
 
+Route::get('/cart/promo-amount', function (PromoCodeService $promoCodeService) {
+    $cart = app(\App\Services\CartService::class)->get();
+
+    $amount = $promoCodeService->calculate($cart);
+
+    return response()->json([
+        'success' => true,
+        'amount' => $amount,
+    ]);
+})->name('cart.promo-amount');
 
 
+Route::post('/cart/promo-code', function (
+    \Illuminate\Http\Request $request,
+    \App\Services\PromoCodeService $promoCodeService
+) {
+    $cart = app(\App\Services\CartService::class)->get();
 
+    if (empty($cart)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Корзина пуста.',
+        ], 422);
+    }
+
+    // Если клиент уже выбрал бонусные семена,
+    // промокод получить нельзя.
+    $bonuses = session('bonuses', []);
+
+    if (is_array($bonuses) && count($bonuses) > 0) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Вы уже выбрали бонусные семена.',
+        ], 422);
+    }
+
+    // Если промокод уже был получен для этой корзины,
+    // повторно новый не создаём.
+    $existingPromo = session('promo_code');
+
+    if (!empty($existingPromo)) {
+        return response()->json([
+            'success' => true,
+            'code' => $existingPromo['code'],
+            'amount' => $existingPromo['amount'],
+        ]);
+    }
+
+    // Создаём новый промокод.
+    $promoCode = $promoCodeService->create($cart);
+
+    // Промокод и бонусные семена — взаимоисключающие варианты.
+    session()->forget('bonuses');
+
+    session()->put('promo_code', [
+        'id' => $promoCode->id,
+        'code' => $promoCode->code,
+        'amount' => (float) $promoCode->amount,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'code' => $promoCode->code,
+        'amount' => $promoCode->amount,
+    ]);
+})->name('cart.promo-code');
+
+
+Route::get('/clear-cart-choice', function () {
+    session()->forget('bonuses');
+    session()->forget('promo_code');
+
+    return redirect()->route('cart.index');
+});
+
+Route::get('/debug-cart-session', function () {
+    return response()->json([
+        'bonuses' => session('bonuses'),
+        'promo_code' => session('promo_code'),
+    ]);
+});
+
+
+Route::post('/checkout/apply-promo', [
+    \App\Http\Controllers\CheckoutController::class,
+    'applyPromo',
+])->name('checkout.apply-promo');
 
 
 

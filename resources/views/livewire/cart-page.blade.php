@@ -327,10 +327,73 @@
                                     <span>Выбрать семку</span>
                                 </a>
 
-                                <a href="#" class="cart-action-button cart-action-button--promo">
+                                @php
+                                    $selectedBonuses = session('bonuses', []);
+                                    $hasSelectedBonuses = is_array($selectedBonuses) && count($selectedBonuses) > 0;
+                                @endphp
 
-                                    <span>Получить промокод</span>
-                                </a>
+                                @if ($hasSelectedBonuses)
+                                    <div class="cart-action-button cart-action-button--promo is-disabled">
+                                        <span>Получить промокод</span>
+                                    </div>
+                                @else
+                                    <a href="#" class="cart-action-button cart-action-button--promo">
+                                        <span>Получить промокод</span>
+                                    </a>
+                                @endif
+                            </div>
+
+
+                            <div class="promo-popup" id="promoPopup">
+                                <div class="promo-popup__overlay"></div>
+
+                                <div class="promo-popup__content">
+                                    <button
+                                        type="button"
+                                        class="promo-popup__close"
+                                        aria-label="Закрыть"
+                                    >
+                                        &times;
+                                    </button>
+
+                                    <div class="promo-popup__title">
+                                        Промокод на будущие покупки
+                                    </div>
+
+                                    <div class="promo-popup__amount-label">
+                                        Сумма по промокоду
+                                    </div>
+
+                                    <div class="promo-popup__amount" id="promoAmount">0 ₽</div>
+
+                                    <div class="promo-popup__conditions">
+                                        <div class="promo-popup__conditions-title">
+                                            Условия использования:
+                                        </div>
+
+                                        <ul>
+                                            <li>Промокод действует на будущие покупки.</li>
+                                            <li>Промокод можно использовать однократно.</li>
+                                            <li>Срок действия — до 31.12.2026.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="promo-popup__actions">
+                                        <button
+                                            type="button"
+                                            class="promo-popup__get"
+                                        >
+                                            Получить промокод
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="promo-popup__back"
+                                        >
+                                            Вернуться к бонусам
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
@@ -494,7 +557,7 @@
 
                 <div class="gift-popup__categories">
 
-                    @foreach($bonuses['groups'] as $index => $group)
+                    @foreach($bonuses['groups'] ?? [] as $index => $group)
 
                         <button
                             type="button"
@@ -517,7 +580,7 @@
 
                 <div class="gift-popup__products">
 
-                    @foreach($bonuses['groups'] as $groupIndex => $group)
+                    @foreach($bonuses['groups']?? [] as $groupIndex => $group)
 
                         <div
                             class="gift-popup__product-group"
@@ -1027,6 +1090,15 @@
                 if (!response.ok || !result.success) {
                     console.error('Ошибка сохранения бонусов');
                     return;
+                }
+
+                // Сразу блокируем кнопку промокода
+                const promoButton = document.querySelector('.cart-action-button--promo');
+
+                if (promoButton) {
+                    promoButton.classList.add('is-disabled');
+                    promoButton.setAttribute('aria-disabled', 'true');
+                    promoButton.removeAttribute('href');
                 }
 
                 closePopup();
@@ -1618,6 +1690,97 @@
         initGiftPopup();
 
     });
+
+
+    const promoButton = document.querySelector('.cart-action-button--promo');
+    const promoPopup = document.getElementById('promoPopup');
+
+    if (promoButton && promoPopup) {
+        const promoClose = promoPopup.querySelector('.promo-popup__close');
+        const promoOverlay = promoPopup.querySelector('.promo-popup__overlay');
+        const promoBack = promoPopup.querySelector('.promo-popup__back');
+        const promoAmount = promoPopup.querySelector('#promoAmount');
+        const promoGet = promoPopup.querySelector('.promo-popup__get');
+
+        const openPromoPopup = async (event) => {
+            event.preventDefault();
+
+            promoPopup.classList.add('is-open');
+            document.body.classList.add('popup-open');
+
+            promoAmount.textContent = 'Расчёт...';
+
+            try {
+                const response = await fetch('{{ route('cart.promo-amount') }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error('Ошибка расчёта промокода');
+                }
+
+                promoAmount.textContent =
+                    Number(result.amount).toLocaleString('ru-RU') + ' ₽';
+
+            } catch (error) {
+                console.error('Ошибка расчёта промокода:', error);
+                promoAmount.textContent = 'Не удалось рассчитать';
+            }
+        };
+
+        const closePromoPopup = () => {
+            promoPopup.classList.remove('is-open');
+            document.body.classList.remove('popup-open');
+        };
+
+        promoButton.addEventListener('click', openPromoPopup);
+        promoClose?.addEventListener('click', closePromoPopup);
+        promoOverlay?.addEventListener('click', closePromoPopup);
+        promoBack?.addEventListener('click', closePromoPopup);
+
+        promoGet?.addEventListener('click', async function () {
+            promoGet.disabled = true;
+            promoGet.textContent = 'Создание промокода...';
+
+            try {
+                const response = await fetch('{{ route('cart.promo-code') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                console.log('PROMO RESPONSE:', response.status, result);
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Ошибка создания промокода');
+                }
+
+                promoAmount.textContent =
+                    Number(result.amount).toLocaleString('ru-RU') + ' ₽';
+
+                promoGet.textContent = result.code;
+
+                console.log('PROMO CODE:', result);
+
+            } catch (error) {
+                console.error('Ошибка создания промокода:', error);
+
+                promoGet.disabled = false;
+                promoGet.textContent = 'Получить промокод';
+
+                alert(error.message || 'Не удалось получить промокод. Попробуйте ещё раз.');
+            }
+        });
+    }
 
 </script>
 @endscript
