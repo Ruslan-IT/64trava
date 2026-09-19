@@ -9112,6 +9112,7 @@ input, button {
     touch-action: pan-y;
     user-select: none;
     -webkit-user-select: none;
+    margin: 0 0 150px 0;
 }
 
 .main-slider__track {
