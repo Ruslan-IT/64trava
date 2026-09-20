@@ -18,7 +18,7 @@
 
         <div class="filter-percent-values">
             <div class="filter-percent-value">1%</div>
-            <div class="filter-percent-value">34%</div>
+            <div class="filter-percent-value">36%</div>
         </div>
 
         <div class="filter-range">
