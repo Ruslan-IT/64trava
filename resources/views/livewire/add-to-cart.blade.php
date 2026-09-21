@@ -25,7 +25,7 @@
             </span>--}}
 
             <span class="product-current-price">
-                {{ $selectedVariant ? $selectedVariant->price : $product->price }} р
+                {{ number_format($selectedVariant ? $selectedVariant->price : $product->price, 0, '.', '') }} р
             </span>
 
     </div>
@@ -38,8 +38,11 @@
                 href="#"
                 wire:click.prevent="selectVariant({{ $variant->id }})"
                 class="pagination-button
-                {{ $variant->stock <= 0 ? 'disabled' : '' }}
-                {{ $selectedVariantId === $variant->id ? 'active' : '' }}"
+        {{ $variant->stock <= 0 ? 'disabled' : '' }}
+        {{ $selectedVariantId === $variant->id ? 'active' : '' }}"
+                data-price="{{ $variant->price }}"
+                data-old-price="{{ $variant->old_price ?? '' }}"
+                data-stock="{{ $variant->stock }}"
             >
                 {{ $variant->package_size }}
             </a>
