@@ -208,10 +208,10 @@ class ProductForm
                                     ->placeholder('30-33%')
                                     ->nullable(),
 
-                                TextInput::make('taste_aroma')
+                               /* TextInput::make('taste_aroma')
                                     ->label('Вкус и аромат')
                                     ->placeholder('Сладкий, фруктовый, цитрусовый')
-                                    ->nullable(),
+                                    ->nullable(),*/
 
                                 TextInput::make('country')
                                     ->label('Страна')
