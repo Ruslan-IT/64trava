@@ -20,6 +20,20 @@ class CheckoutController extends Controller
     {
         $cart = $cartService->get();
 
+        $selectedIds = session('cart_selected');
+
+        if (is_array($selectedIds)) {
+            $cart = array_filter(
+                $cart,
+                fn ($item, $variantId) => in_array(
+                    (int) $variantId,
+                    array_map('intval', $selectedIds),
+                    true
+                ),
+                ARRAY_FILTER_USE_BOTH
+            );
+        }
+
         if (empty($cart)) {
             return redirect()->route('cart.index');
         }
@@ -184,6 +198,20 @@ class CheckoutController extends Controller
         */
 
         $cart = $cartService->get();
+
+        $selectedIds = session('cart_selected');
+
+        if (is_array($selectedIds)) {
+            $cart = array_filter(
+                $cart,
+                fn ($item, $variantId) => in_array(
+                    (int) $variantId,
+                    array_map('intval', $selectedIds),
+                    true
+                ),
+                ARRAY_FILTER_USE_BOTH
+            );
+        }
 
         if (empty($cart)) {
             return redirect()->route('cart.index');
@@ -368,7 +396,11 @@ class CheckoutController extends Controller
 
             'payment_method' => $validated['payment_method'],
 
-            'promo_code' => $validated['promo_code'] ?? '',
+            'promo_code' => (
+                !empty($validated['promo_code'])
+                    ? $validated['promo_code']
+                    : (session('promo_code')['code'] ?? '')
+                ),
 
             /*
             |--------------------------------------------------------------------------
@@ -500,7 +532,20 @@ class CheckoutController extends Controller
             $telegramMessage .= "💳 Оплата: {$orderData['payment_method']}\n";
 
             if (!empty($orderData['promo_code'])) {
-                $telegramMessage .= "🎟 Промокод: {$orderData['promo_code']}\n";
+
+                if ($orderData['discount'] > 0) {
+
+                    $telegramMessage .= "🎟 Промокод: {$orderData['promo_code']}\n";
+
+                    $telegramMessage .= "🏷 Скидка по промокоду: "
+                        . number_format($orderData['discount'], 0, '.', ' ')
+                        . " ₽\n";
+
+                } else {
+
+                    $telegramMessage .= "🎁 Выдан промокод: {$orderData['promo_code']}\n";
+
+                }
             }
 
             $telegramMessage .= "\n🕐 {$orderData['created_at']}";

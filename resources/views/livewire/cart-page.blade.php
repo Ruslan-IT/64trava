@@ -101,9 +101,14 @@
 
                                         <div class="cart-product">
                                             <label class="cart-product-checkbox">
-                                                <input type="checkbox" class="cart-product-check" checked>
+                                                <input
+                                                    type="checkbox"
+                                                    class="cart-product-check"
+                                                    value="{{ $variant->id }}"
+                                                    wire:model.live="selectedItems"
+                                                    wire:change="selectionChanged"
+                                                >
                                             </label>
-
                                             {{-- Изображение товара --}}
                                             <img
                                                 src="{{ asset('storage/' . $variant->product->image) }}"
@@ -749,7 +754,7 @@
                 <!-- YOU SELECTED -->
 
                 <h3 class="gift-popup__selected-title">
-                    Вы выбрали
+                    Вы выбрали:
                 </h3>
 
                 <div class="gift-popup__selection-box">
@@ -766,7 +771,7 @@
                 <!-- LEFT TO SELECT -->
 
                 <h3 class="gift-popup__selected-title">
-                    Вам осталось выбрать
+                    Вам осталось выбрать:
                 </h3>
 
                 <div class="gift-popup__selection-box">
@@ -1457,12 +1462,12 @@
                 element.innerHTML = `
 
                     <div class="gift-popup__seed-title">
-                        ${item.name}
+                        ${item.name}  ${item.manufacturer}
                     </div>
 
-                    <div class="gift-popup__seed-name">
-                        ${item.manufacturer}
-                    </div>
+                    <!--<div class="gift-popup__seed-name">
+
+                    </div>-->
 
                     <div class="gift-popup__seed-count">
                         ${item.quantity} шт.
@@ -1779,6 +1784,138 @@
 
                 alert(error.message || 'Не удалось получить промокод. Попробуйте ещё раз.');
             }
+        });
+    }
+
+
+    // ===============================
+    // Выбор товаров в корзине
+    // ===============================
+
+    const cartSelectAll = document.getElementById('cartSelectAll');
+
+    function getCartProducts() {
+        return document.querySelectorAll('.cart-product-item');
+    }
+
+    function getCartChecks() {
+        return document.querySelectorAll('.cart-product-check');
+    }
+
+    function updateCartTotals() {
+        let total = 0;
+        let count = 0;
+
+        getCartProducts().forEach(product => {
+            const checkbox = product.querySelector('.cart-product-check');
+
+            if (!checkbox || !checkbox.checked) {
+                return;
+            }
+
+            const price = Number(product.dataset.price) || 0;
+
+            const quantityInput = product.querySelector(
+                '.cart-product-quantity input'
+            );
+
+            const quantity = quantityInput
+                ? Number(quantityInput.value) || 0
+                : 0;
+
+            total += price * quantity;
+            count += quantity;
+        });
+
+        const subtotal = document.getElementById('cartOrderSubtotal');
+        const orderTotal = document.getElementById('cartOrderTotal');
+
+        if (subtotal) {
+            subtotal.textContent =
+                total.toLocaleString('ru-RU') + ' ₽';
+        }
+
+        if (orderTotal) {
+            orderTotal.textContent =
+                total.toLocaleString('ru-RU') + ' ₽';
+        }
+
+        // Обновляем количество товаров
+        const orderRows = document.querySelectorAll('.cart-order-row span');
+
+        orderRows.forEach(span => {
+            if (span.textContent.includes('Товары')) {
+                span.textContent = `Товары ( ${count})`;
+            }
+        });
+
+        updateSelectAllState();
+    }
+
+    function updateSelectAllState() {
+        if (!cartSelectAll) {
+            return;
+        }
+
+        const checks = [...getCartChecks()];
+
+        if (!checks.length) {
+            cartSelectAll.checked = false;
+            cartSelectAll.indeterminate = false;
+            return;
+        }
+
+        const checkedCount = checks.filter(
+            checkbox => checkbox.checked
+        ).length;
+
+        cartSelectAll.checked = checkedCount === checks.length;
+
+        cartSelectAll.indeterminate =
+            checkedCount > 0 &&
+            checkedCount < checks.length;
+    }
+
+
+    // Выбрать всё
+    cartSelectAll?.addEventListener('change', function () {
+        getCartChecks().forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+
+       /* updateCartTotals();*/
+        saveSelectedItems();
+    });
+
+
+    // Отдельный товар
+    document.addEventListener('change', function (event) {
+        if (!event.target.classList.contains('cart-product-check')) {
+            return;
+        }
+
+       /* updateCartTotals();*/
+        saveSelectedItems();
+    });
+
+
+    // Первый расчёт при загрузке
+    /*updateCartTotals();*/
+
+
+    function saveSelectedItems() {
+        const selected = [];
+
+        getCartProducts().forEach(product => {
+            const checkbox = product.querySelector('.cart-product-check');
+
+            if (checkbox?.checked) {
+                selected.push(product.dataset.variantId);
+            }
+        });
+
+        Livewire.dispatch('setSelectedItems', {
+            variantIds: selected
         });
     }
 

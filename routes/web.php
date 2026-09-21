@@ -163,6 +163,22 @@ Route::get('/telegram-test', function () {
 Route::get('/cart/promo-amount', function (PromoCodeService $promoCodeService) {
     $cart = app(\App\Services\CartService::class)->get();
 
+    $selectedIds = session('cart_selected');
+
+    if (is_array($selectedIds)) {
+        $selectedIds = array_map('intval', $selectedIds);
+
+        $cart = array_filter(
+            $cart,
+            fn ($item, $variantId) => in_array(
+                (int) $variantId,
+                $selectedIds,
+                true
+            ),
+            ARRAY_FILTER_USE_BOTH
+        );
+    }
+
     $amount = $promoCodeService->calculate($cart);
 
     return response()->json([
@@ -178,10 +194,26 @@ Route::post('/cart/promo-code', function (
 ) {
     $cart = app(\App\Services\CartService::class)->get();
 
+    $selectedIds = session('cart_selected');
+
+    if (is_array($selectedIds)) {
+        $selectedIds = array_map('intval', $selectedIds);
+
+        $cart = array_filter(
+            $cart,
+            fn ($item, $variantId) => in_array(
+                (int) $variantId,
+                $selectedIds,
+                true
+            ),
+            ARRAY_FILTER_USE_BOTH
+        );
+    }
+
     if (empty($cart)) {
         return response()->json([
             'success' => false,
-            'message' => 'Корзина пуста.',
+            'message' => 'Выберите хотя бы один товар.',
         ], 422);
     }
 
@@ -208,7 +240,7 @@ Route::post('/cart/promo-code', function (
         ]);
     }
 
-    // Создаём новый промокод.
+    // Создаём новый промокод только для выбранных товаров.
     $promoCode = $promoCodeService->create($cart);
 
     // Промокод и бонусные семена — взаимоисключающие варианты.
@@ -223,7 +255,7 @@ Route::post('/cart/promo-code', function (
     return response()->json([
         'success' => true,
         'code' => $promoCode->code,
-        'amount' => $promoCode->amount,
+        'amount' => (float) $promoCode->amount,
     ]);
 })->name('cart.promo-code');
 

@@ -79,4 +79,18 @@ class PromoCodeService
             'status' => 'active',
         ]);
     }
+
+
+    private function getSelectedCart(): array
+    {
+        return array_filter(
+            $this->cart,
+            fn ($item, $variantId) => in_array(
+                (int) $variantId,
+                $this->selectedItems,
+                true
+            ),
+            ARRAY_FILTER_USE_BOTH
+        );
+    }
 }
