@@ -1748,10 +1748,52 @@
         promoBack?.addEventListener('click', closePromoPopup);
 
         promoGet?.addEventListener('click', async function () {
+
+            // Если промокод уже получен — копируем его
+            if (promoGet.dataset.code) {
+
+                const code = promoGet.dataset.code;
+
+                const textarea = document.createElement('textarea');
+
+                textarea.value = code;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+
+                document.body.appendChild(textarea);
+
+                textarea.focus();
+                textarea.select();
+                textarea.setSelectionRange(0, textarea.value.length);
+
+                try {
+                    document.execCommand('copy');
+
+                    promoGet.textContent = 'Скопировано!';
+
+                    setTimeout(() => {
+                        promoGet.textContent = code;
+                    }, 1500);
+
+                } catch (error) {
+
+                    console.error('Ошибка копирования:', error);
+
+                }
+
+                document.body.removeChild(textarea);
+
+                return;
+            }
+
+
+            // Получаем промокод
             promoGet.disabled = true;
             promoGet.textContent = 'Создание промокода...';
 
             try {
+
                 const response = await fetch('{{ route('cart.promo-code') }}', {
                     method: 'POST',
                     headers: {
@@ -1766,23 +1808,43 @@
                 console.log('PROMO RESPONSE:', response.status, result);
 
                 if (!response.ok || !result.success) {
-                    throw new Error(result.message || 'Ошибка создания промокода');
+                    throw new Error(
+                        result.message || 'Ошибка создания промокода'
+                    );
                 }
+
 
                 promoAmount.textContent =
                     Number(result.amount).toLocaleString('ru-RU') + ' ₽';
 
+
+                // Запоминаем промокод
+                promoGet.dataset.code = result.code;
+
+
+                // Показываем промокод
                 promoGet.textContent = result.code;
+
+
+                // Кнопку оставляем активной,
+                // чтобы по ней можно было кликнуть и скопировать
+                promoGet.disabled = false;
+
 
                 console.log('PROMO CODE:', result);
 
             } catch (error) {
+
                 console.error('Ошибка создания промокода:', error);
 
                 promoGet.disabled = false;
+
                 promoGet.textContent = 'Получить промокод';
 
-                alert(error.message || 'Не удалось получить промокод. Попробуйте ещё раз.');
+                alert(
+                    error.message ||
+                    'Не удалось получить промокод. Попробуйте ещё раз.'
+                );
             }
         });
     }
@@ -1920,4 +1982,7 @@
     }
 
 </script>
+
+
+
 @endscript
