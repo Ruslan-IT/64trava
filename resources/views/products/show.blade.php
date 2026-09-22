@@ -228,14 +228,14 @@
 
                             <div class="product-detail-feature">
 
-                                <div class="product-detail-feature-icon">
+                              {{--  <div class="product-detail-feature-icon">
                                     <img
                                         src="{{ asset('images/flags/' . $product->country_flag) }}"
                                         alt="{{ $product->country }}"
                                         width="32"
                                         height="32"
                                     >
-                                </div>
+                                </div>--}}
 
                                {{-- <div class="product-detail-feature-text">
                                     <span>Страна</span>
