@@ -237,10 +237,10 @@
                                     >
                                 </div>
 
-                                <div class="product-detail-feature-text">
+                               {{-- <div class="product-detail-feature-text">
                                     <span>Страна</span>
                                     <strong>{{ $product->country }}</strong>
-                                </div>
+                                </div>--}}
 
                             </div>
 
