@@ -3,11 +3,14 @@
     <div class="product-image-wrapper">
 
         @if($product->image)
-            <img
-                src="{{ asset('storage/' . $product->image) }}"
-                alt="{{ $product->name }}"
-                class="product-image"
-            >
+            <a href="">
+                <img
+                    src="{{ asset('storage/' . $product->image) }}"
+                    alt="{{ $product->name }}"
+                    class="product-image"
+                >
+            </a>
+
         @else
             <img
                 src="{{ asset('images/no-img2.png') }}"
@@ -51,7 +54,8 @@
     </div>
 
     <h3 class="product-title">
-        {{ $product->name  }}
+        <a href="{{ route('product.show', $product->slug) }}"> {{ $product->name  }}</a>
+
     </h3>
 
     <div class="product-subtitle">

@@ -306,13 +306,13 @@ Route::get('news-details', function () {
 
 
 
-Route::get('product-2', function () {
+/*Route::get('product-2', function () {
     return view('product-2');
 });
 
 Route::get('product-details', function () {
     return view('product-details');
-});
+});*/
 
 Route::get('text', function () {
     return view('text');

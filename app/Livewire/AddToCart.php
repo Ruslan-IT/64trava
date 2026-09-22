@@ -15,12 +15,14 @@ class AddToCart extends Component
 
     public int $quantity = 1;
 
-
     public bool $addedToCart = false;
 
-    public function mount(Product $product): void
+    public string $type = 'default';
+
+    public function mount(Product $product, string $type = 'default'): void
     {
         $this->product = $product;
+        $this->type = $type;
 
         $variant = $product->variants
             ->first(fn (ProductVariant $variant) => $variant->stock > 0);
@@ -43,8 +45,6 @@ class AddToCart extends Component
 
     public function increment(): void
     {
-
-
         $variant = $this->product->variants
             ->firstWhere('id', $this->selectedVariantId);
 
@@ -52,13 +52,9 @@ class AddToCart extends Component
             return;
         }
 
-
-
         if ($this->quantity < $variant->stock) {
             $this->quantity++;
         }
-
-
     }
 
     public function decrement(): void
