@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Category;
 use App\Models\Product;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -24,6 +25,12 @@ class CatalogFilter extends Component
 
     public ?int $heightMin = 70;
     public ?int $heightMax = 200;
+
+
+    public $currentCategory = null;
+    public $brand = null;
+    public $tag = null;
+    public $catalogInfo = null;
 
     public function updatedSeedTypes(): void
     {
@@ -117,6 +124,22 @@ class CatalogFilter extends Component
     {
         $query = Product::query()
             ->with(['brand', 'categories', 'tags']);
+
+        if ($this->currentCategory) {
+            $query->whereHas('categories', function ($q) {
+                $q->where('categories.id', $this->currentCategory->id);
+            });
+        }
+
+        if ($this->brand) {
+            $query->where('brand_id', $this->brand->id);
+        }
+
+        if ($this->tag) {
+            $query->whereHas('tags', function ($q) {
+                $q->where('tags.id', $this->tag->id);
+            });
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -291,10 +314,45 @@ class CatalogFilter extends Component
             ")->count(),
         ];
 
+
+        if ($this->currentCategory) {
+            $query->whereHas('categories', function ($q) {
+                $q->where('categories.id', $this->currentCategory->id);
+            });
+        }
+
+        if ($this->brand) {
+            $query->where('brand_id', $this->brand->id);
+        }
+
+        if ($this->tag) {
+            $query->whereHas('tags', function ($q) {
+                $q->where('tags.id', $this->tag->id);
+            });
+        }
+
+        $categories = Category::query()
+            ->orderBy('name')
+            ->get();
+
         return view('livewire.catalog-filter', [
             'products' => $products,
             'seedTypeCounts' => $seedTypeCounts,
             'genotypeCounts' => $genotypeCounts,
+            'currentCategory' => $this->currentCategory,
+            'brand' => $this->brand,
+            'tag' => $this->tag,
+            'categories' =>$categories,
+            'catalogInfo' => $this->catalogInfo,
         ]);
+    }
+
+
+    public function mount($currentCategory = null, $brand = null, $tag = null, $catalogInfo = null): void
+    {
+        $this->currentCategory = $currentCategory;
+        $this->brand = $brand;
+        $this->tag = $tag;
+        $this->catalogInfo = $catalogInfo;
     }
 }

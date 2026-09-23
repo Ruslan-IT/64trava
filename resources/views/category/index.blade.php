@@ -54,7 +54,12 @@
 
 
 
-                @livewire('catalog-filter')
+            @livewire('catalog-filter', [
+                'currentCategory' => $currentCategory,
+                'brand' => $brand,
+                'tag' => $tag,
+                'catalogInfo' => $catalogInfo,
+            ])
 
 
 
@@ -354,6 +359,36 @@
 
             });
 
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.catalog-welcome').forEach(block => {
+                const text = block.querySelector('.catalog-welcome-text');
+                const button = block.querySelector('.catalog-welcome-more');
+
+                if (!text || !button) {
+                    return;
+                }
+
+                // Если текст и так помещается — кнопку не показываем
+                if (text.scrollHeight <= text.clientHeight) {
+                    button.style.display = 'none';
+                    return;
+                }
+
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    text.classList.toggle('is-expanded');
+
+                    button.textContent = text.classList.contains('is-expanded')
+                        ? 'Свернуть'
+                        : 'Читать далее';
+                });
+            });
         });
     </script>
 

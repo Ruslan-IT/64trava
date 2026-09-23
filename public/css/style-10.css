@@ -4579,6 +4579,18 @@ input, button {
     margin-top: 20px;
     font-size: 16px;
     line-height: 1.4;
+    max-height: 110px;
+    overflow: hidden;
+    position: relative;
+}
+
+.catalog-welcome-text.is-expanded {
+    max-height: none;
+}
+
+.catalog-welcome-more {
+    display: inline-block;
+    margin-top: 10px;
 }
 
 .catalog-welcome-more {

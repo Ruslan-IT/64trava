@@ -500,7 +500,7 @@
     <div class="catalog-content">
         <div class="catalog-products">
 
-           {{-- @if($currentCategory || $brand || $tag)
+           @if($currentCategory || $brand || $tag)
 
                 <div class="catalog-welcome">
 
@@ -581,7 +581,7 @@
                     </svg>
                 </button>
 
-            </div>--}}
+            </div>
 
 
             <div class="catalog-controls">
