@@ -82,6 +82,23 @@
         filterClose?.addEventListener('click', () => {
             filter?.classList.remove('active');
         });
+
+        document.addEventListener('click', (event) => {
+            const currentFilter = document.querySelector('.catalog-filter');
+
+            if (!currentFilter) {
+                return;
+            }
+
+            if (event.target.closest('.catalog-filter-open')) {
+                event.preventDefault();
+                currentFilter.classList.add('active');
+            }
+
+            if (event.target.closest('.catalog-filter-close')) {
+                currentFilter.classList.remove('active');
+            }
+        });
     </script>
 
     {{--показать еще --}}

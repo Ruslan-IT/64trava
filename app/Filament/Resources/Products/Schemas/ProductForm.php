@@ -204,52 +204,95 @@ class ProductForm
                             ->schema([
 
                                 TextInput::make('thc')
-                                    ->label('ТГК')
-                                    ->placeholder('30-33%')
+                                    ->label('ТГК (THC %)')
+                                    ->placeholder('26')
                                     ->nullable(),
 
-                               /* TextInput::make('taste_aroma')
-                                    ->label('Вкус и аромат')
-                                    ->placeholder('Сладкий, фруктовый, цитрусовый')
-                                    ->nullable(),*/
-
-                                TextInput::make('country')
-                                    ->label('Страна')
-                                    ->placeholder('США')
-                                    ->nullable(),
-
-                                TextInput::make('effect')
-                                    ->label('Эффект')
-                                    ->placeholder('Расслабляющий, бодрящий')
-                                    ->nullable(),
-
-                                TextInput::make('flowering')
-                                    ->label('Цветение')
-                                    ->placeholder('8-10 недель')
-                                    ->nullable(),
-
-                                TextInput::make('genetics')
-                                    ->label('Генетика')
-                                    ->placeholder('Indica / Sativa / Hybrid')
+                                TextInput::make('cbd')
+                                    ->label('КБД (CBD %)')
+                                    ->numeric()
+                                    ->step(0.01)
                                     ->nullable(),
 
                                 Select::make('seed_type')
                                     ->label('Тип семян')
                                     ->options([
-                                        'A' => 'Автоцветущие',
-                                        'F' => 'Фотопериодные',
-                                        'R' => 'Регулярные',
+                                        'F' => 'Feminised',
+                                        'A' => 'Autoflower',
+                                        'R' => 'Regular',
+                                        'AR' => 'Autoregular',
                                     ])
                                     ->required(),
 
-                                TextInput::make('height')
-                                    ->label('Высота')
-                                    ->placeholder('70-100 см')
+                                TextInput::make('sativa_percent')
+                                    ->label('Sativa %')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->step(1)
+                                    ->nullable(),
+
+                                TextInput::make('indica_percent')
+                                    ->label('Indica %')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->step(1)
+                                    ->nullable(),
+
+                                TextInput::make('genetics')
+                                    ->label('Генетика')
+                                    ->placeholder('Mexican x Colombian x Thai x Afghan')
+                                    ->nullable(),
+
+                                TextInput::make('taste')
+                                    ->label('Вкус')
+                                    ->placeholder('цитрус, кофе, хвоя и древесный')
+                                    ->nullable(),
+
+                                TextInput::make('effect')
+                                    ->label('Эффект')
+                                    ->placeholder('эйфоричный, расслабляющий, творческий')
+                                    ->nullable(),
+
+                                TextInput::make('aroma')
+                                    ->label('Аромат')
+                                    ->placeholder('землистый, хвоя, резкий и сладкий')
+                                    ->nullable(),
+
+                                TextInput::make('indoor_height')
+                                    ->label('Высота Indoor')
+                                    ->placeholder('100-140 см')
                                     ->nullable(),
 
                                 TextInput::make('yield')
-                                    ->label('Урожайность')
-                                    ->placeholder('400-500 г/м²')
+                                    ->label('Урожайность Indoor')
+                                    ->placeholder('500-700 г/м²')
+                                    ->nullable(),
+
+                                TextInput::make('height')
+                                    ->label('Высота Outdoor')
+                                    ->placeholder('150-200 см')
+                                    ->nullable(),
+
+                                TextInput::make('outdoor_yield')
+                                    ->label('Урожайность Outdoor')
+                                    ->placeholder('1500 г/растение')
+                                    ->nullable(),
+
+                                TextInput::make('flowering')
+                                    ->label('Цветение / Созревание')
+                                    ->placeholder('60-70 дней')
+                                    ->nullable(),
+
+                                TextInput::make('harvest')
+                                    ->label('Сбор урожая')
+                                    ->placeholder('October 2nd-3rd week')
+                                    ->nullable(),
+
+                                TextInput::make('country')
+                                    ->label('Страна')
+                                    ->placeholder('США')
                                     ->nullable(),
 
                                 Textarea::make('advantages')
@@ -257,7 +300,6 @@ class ProductForm
                                     ->rows(3)
                                     ->nullable()
                                     ->columnSpanFull(),
-
 
                             ])
                             ->columns(2),

@@ -46,6 +46,15 @@ class Product extends Model
         'gallery',
         'full_description',
 
+        'sativa_percent',
+        'indica_percent',
+        'cbd',
+        'taste',
+        'aroma',
+        'indoor_height',
+        'outdoor_yield',
+        'harvest',
+
         'seo_title',
         'seo_description',
         'seo_keywords',
@@ -61,6 +70,10 @@ class Product extends Model
         'price' => 'decimal:2',
         'old_price' => 'decimal:2',
         'rating' => 'float',
+
+        'sativa_percent' => 'float',
+        'indica_percent' => 'float',
+        'cbd' => 'float',
 
         'gallery' => 'array',
     ];
@@ -139,5 +152,44 @@ class Product extends Model
         return $this->hasOne(BonusProduct::class);
     }
 
+    /**
+     * Верхняя граница диапазона: "26-30" → 30, "100-150 см" → 150, "60%" → 60.
+     */
+    public static function upperBoundSql(string $column): string
+    {
+        $column = preg_replace('/[^a-z_]/', '', $column) ?: 'id';
 
+        return "CAST(NULLIF(SUBSTRING_INDEX(REGEXP_REPLACE({$column}, '[^0-9-]', ''), '-', -1), '') AS DECIMAL(10,2))";
+    }
+
+    /**
+     * Процент сативы: новые поля, иначе разбор advantages («Сативы 70% / Индики 30%»).
+     */
+    public static function sativaValueSql(): string
+    {
+        $parsed = "CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(advantages, 'Сативы ', -1), '%', 1), '') AS DECIMAL(10,2))";
+
+        return "COALESCE(sativa_percent, IF(indica_percent IS NOT NULL, 100 - indica_percent, NULL), {$parsed})";
+    }
+
+    public static function splitCharacteristicTokens(?string $value): array
+    {
+        if ($value === null || trim($value) === '') {
+            return [];
+        }
+
+        $normalized = str_replace([' и ', ';'], ',', $value);
+        $parts = preg_split('/\s*,\s*/u', $normalized) ?: [];
+        $tokens = [];
+
+        foreach ($parts as $part) {
+            $part = trim($part);
+
+            if ($part !== '') {
+                $tokens[$part] = $part;
+            }
+        }
+
+        return array_values($tokens);
+    }
 }

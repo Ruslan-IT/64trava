@@ -5,7 +5,22 @@
             ×
         </button>
 
+        <div class="filter-group filter-group-light">
+            <input
+                type="search"
+                class="filter-search-input"
+                placeholder="Поиск по названию"
+                wire:model.live.debounce.400ms="search"
+            >
+        </div>
+
+       
+
+
+
         <div class="filter-percent-values">
+
+
 
             <div class="filter-percent-value {{ $activeThcHandle === 'min' ? 'active' : '' }}">
                 {{ $thcMin ?? 1 }}%
@@ -52,6 +67,8 @@
         </div>
 
         <div class="filter-divider"></div>
+
+
 
 
         <div class="filter-group filter-group-light">
@@ -122,6 +139,26 @@
 
                     <span class="filter-option-count">
                 {{ $seedTypeCounts['R'] ?? 0 }}
+            </span>
+
+                </label>
+
+                <label class="filter-option">
+
+                    <input
+                        type="checkbox"
+                        wire:model.live="seedTypes"
+                        value="AR"
+                    >
+
+                    <span class="filter-radio"></span>
+
+                    <span class="filter-option-name">
+                Авторегулярный
+            </span>
+
+                    <span class="filter-option-count">
+                {{ $seedTypeCounts['AR'] ?? 0 }}
             </span>
 
                 </label>
@@ -279,6 +316,93 @@
 
         <div class="filter-divider"></div>
 
+        <div class="filter-group filter-group-genotype">
+
+            <button type="button" class="filter-group-header">
+                <span>Вкус</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-genotype-list">
+
+                @forelse ($tasteOptions as $option => $count)
+                    <label class="filter-option">
+                        <input type="checkbox" wire:model.live="tastes" value="{{ $option }}">
+                        <span class="filter-radio"></span>
+                        <span class="filter-option-name">{{ $option }}</span>
+                        <span class="filter-option-count">{{ $count }}</span>
+                    </label>
+                @empty
+                    <span class="filter-option-name">Нет значений</span>
+                @endforelse
+
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group filter-group-genotype">
+
+            <button type="button" class="filter-group-header">
+                <span>Эффект</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-genotype-list">
+
+                @forelse ($effectOptions as $option => $count)
+                    <label class="filter-option">
+                        <input type="checkbox" wire:model.live="effects" value="{{ $option }}">
+                        <span class="filter-radio"></span>
+                        <span class="filter-option-name">{{ $option }}</span>
+                        <span class="filter-option-count">{{ $count }}</span>
+                    </label>
+                @empty
+                    <span class="filter-option-name">Нет значений</span>
+                @endforelse
+
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group filter-group-genotype">
+
+            <button type="button" class="filter-group-header">
+                <span>Аромат</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-genotype-list">
+
+                @forelse ($aromaOptions as $option => $count)
+                    <label class="filter-option">
+                        <input type="checkbox" wire:model.live="aromas" value="{{ $option }}">
+                        <span class="filter-radio"></span>
+                        <span class="filter-option-name">{{ $option }}</span>
+                        <span class="filter-option-count">{{ $count }}</span>
+                    </label>
+                @empty
+                    <span class="filter-option-name">Нет значений</span>
+                @endforelse
+
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
 
         {{--<div class="filter-group filter-group-genotype">
 
@@ -413,7 +537,7 @@
 
             <button type="button" class="filter-group-header">
 
-                <span>Высота</span>
+                <span>Высота Outdoor</span>
 
                 <svg
                     class="filter-arrow"
@@ -476,6 +600,178 @@
                     wire:model.live="heightMax"
                     class="filter-height-input filter-height-max"
                 >
+
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group filter-group-height">
+
+            <button type="button" class="filter-group-header">
+                <span>Высота Indoor</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-height-values">
+                <div class="filter-height-value">{{ $indoorHeightMin ?? 50 }} см</div>
+                <div class="filter-height-value">{{ $indoorHeightMax ?? 250 }} см</div>
+            </div>
+
+            <div class="filter-range filter-height-range">
+                <div class="filter-height-track"></div>
+                <div
+                    class="filter-height-range-fill"
+                    style="
+                left: {{ (($indoorHeightMin ?? 50) - 50) / 200 * 100 }}%;
+                right: {{ 100 - (($indoorHeightMax ?? 250) - 50) / 200 * 100 }}%;
+            "
+                ></div>
+                <input type="range" min="50" max="250" value="{{ $indoorHeightMin ?? 50 }}" wire:model.live="indoorHeightMin" class="filter-height-input filter-height-min">
+                <input type="range" min="50" max="250" value="{{ $indoorHeightMax ?? 250 }}" wire:model.live="indoorHeightMax" class="filter-height-input filter-height-max">
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group filter-group-height">
+
+            <button type="button" class="filter-group-header">
+                <span>Урожайность Indoor</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-height-values">
+                <div class="filter-height-value">{{ $indoorYieldMin ?? 100 }} г</div>
+                <div class="filter-height-value">{{ $indoorYieldMax ?? 1500 }} г</div>
+            </div>
+
+            <div class="filter-range filter-height-range">
+                <div class="filter-height-track"></div>
+                <div
+                    class="filter-height-range-fill"
+                    style="
+                left: {{ (($indoorYieldMin ?? 100) - 100) / 1400 * 100 }}%;
+                right: {{ 100 - (($indoorYieldMax ?? 1500) - 100) / 1400 * 100 }}%;
+            "
+                ></div>
+                <input type="range" min="100" max="1500" step="10" value="{{ $indoorYieldMin ?? 100 }}" wire:model.live="indoorYieldMin" class="filter-height-input filter-height-min">
+                <input type="range" min="100" max="1500" step="10" value="{{ $indoorYieldMax ?? 1500 }}" wire:model.live="indoorYieldMax" class="filter-height-input filter-height-max">
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group filter-group-height">
+
+            <button type="button" class="filter-group-header">
+                <span>Урожайность Outdoor</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-height-values">
+                <div class="filter-height-value">{{ $outdoorYieldMin ?? 100 }} г</div>
+                <div class="filter-height-value">{{ $outdoorYieldMax ?? 2500 }} г</div>
+            </div>
+
+            <div class="filter-range filter-height-range">
+                <div class="filter-height-track"></div>
+                <div
+                    class="filter-height-range-fill"
+                    style="
+                left: {{ (($outdoorYieldMin ?? 100) - 100) / 2400 * 100 }}%;
+                right: {{ 100 - (($outdoorYieldMax ?? 2500) - 100) / 2400 * 100 }}%;
+            "
+                ></div>
+                <input type="range" min="100" max="2500" step="10" value="{{ $outdoorYieldMin ?? 100 }}" wire:model.live="outdoorYieldMin" class="filter-height-input filter-height-min">
+                <input type="range" min="100" max="2500" step="10" value="{{ $outdoorYieldMax ?? 2500 }}" wire:model.live="outdoorYieldMax" class="filter-height-input filter-height-max">
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group filter-group-genotype">
+
+            <button type="button" class="filter-group-header">
+                <span>Сбор урожая</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-genotype-list">
+
+                @forelse ($harvestOptions as $option => $count)
+                    <label class="filter-option">
+
+                        <input
+                            type="checkbox"
+                            wire:model.live="harvests"
+                            value="{{ $option }}"
+                        >
+
+                        <span class="filter-radio"></span>
+
+                        <span class="filter-option-name">{{ $option }}</span>
+
+                        <span class="filter-option-count">{{ $count }}</span>
+
+                    </label>
+                @empty
+                    <span class="filter-option-name">Нет значений</span>
+                @endforelse
+
+            </div>
+
+        </div>
+
+        <div class="filter-divider"></div>
+
+
+        <div class="filter-group filter-group-light">
+
+            <button type="button" class="filter-group-header">
+                <span>CBD</span>
+
+                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
+
+            <div class="filter-options">
+
+                <label class="filter-option">
+
+                    <input
+                        type="checkbox"
+                        wire:model.live="hasCbd"
+                    >
+
+                    <span class="filter-radio"></span>
+
+                    <span class="filter-option-name">
+                Есть CBD
+            </span>
+
+                    <span class="filter-option-count">
+                {{ $cbdCount ?? 0 }}
+            </span>
+
+                </label>
 
             </div>
 
@@ -591,13 +887,11 @@
                     <div class="catalog-sort">
                         <span class="catalog-controls-title">Сортировка</span>
 
-                        <button type="button" class="catalog-select">
-                            <span>Сначала дорогие</span>
-
-                            <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
-                                <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                        </button>
+                        <select class="catalog-select" wire:model.live="sort">
+                            @foreach ($sortOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="catalog-grouping">
@@ -616,9 +910,9 @@
 
                 <div class="catalog-view-buttons">
 
-                    <a href="#" class="catalog-category-button mb">
+                    <button type="button" class="catalog-category-button mb catalog-filter-open">
                         Фильтр
-                    </a>
+                    </button>
 
                     <div class="catalog-view-buttons-2">
                         <button type="button" class="catalog-view-button active">
@@ -667,11 +961,27 @@
 
 
 
-                  @foreach($products as $product)
+                  @forelse($products as $product)
                       @include('components.product-card', ['product' => $product])
-                  @endforeach
+                  @empty
+                      <p class="catalog-empty">Товары не найдены</p>
+                  @endforelse
 
             </div>
+
+            @if ($products->lastPage() > 1)
+                <div class="products-pagination">
+                    @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                        <button
+                            type="button"
+                            wire:click="gotoPage({{ $page }})"
+                            class="pagination-button {{ $products->currentPage() === $page ? 'active' : '' }}"
+                        >
+                            {{ $page }}
+                        </button>
+                    @endforeach
+                </div>
+            @endif
 
 
         </div>

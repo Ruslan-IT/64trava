@@ -5249,7 +5249,7 @@ input, button {
 
 .product-detail-features {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr  1fr;
     gap: 40px;
 
     margin-top: 30px;
@@ -9585,6 +9585,29 @@ input, button {
     background: #277423;
     cursor: pointer;
     pointer-events: auto;
+}
+
+.filter-search-input {
+    width: 320px;
+    max-width: 100%;
+    height: 50px;
+    margin-top: 20px;
+    padding: 0 16px;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    color: #000;
+    font-family: inherit;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.catalog-sort .catalog-select {
+    max-width: 280px;
+}
+
+.catalog-empty {
+    margin: 20px 0 40px;
+    font-size: 16px;
 }
 
 .filter-height-min {
