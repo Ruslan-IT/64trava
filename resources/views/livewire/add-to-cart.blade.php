@@ -327,14 +327,14 @@
             --}}
 
             <span class="product-current-price">
-                {{ number_format(
-                    $selectedVariant
-                        ? $selectedVariant->price
-                        : $product->price,
-                    0,
-                    '.',
-                    ''
-                ) }} р
+                @php
+                    $displayPrice = $selectedVariant ? $selectedVariant->price : $product->price;
+                @endphp
+                @if($displayPrice === null)
+                    Цена не указана
+                @else
+                    {{ number_format($displayPrice, 0, '.', '') }} р
+                @endif
             </span>
 
         </div>
@@ -362,6 +362,7 @@
         </div>
 
 
+        @if($product->variants->isNotEmpty())
         <div class="product-actions">
 
             <div class="quantity">
@@ -404,6 +405,7 @@
             </button>
 
         </div>
+        @endif
 
     </div>
 

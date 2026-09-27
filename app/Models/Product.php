@@ -58,6 +58,8 @@ class Product extends Model
         'seo_title',
         'seo_description',
         'seo_keywords',
+
+        'excel_row',
     ];
 
     protected $casts = [

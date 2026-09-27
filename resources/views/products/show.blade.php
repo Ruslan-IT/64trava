@@ -122,7 +122,11 @@
                         </span>
 
                             <span class="product-detail-current-price">
-                                {{ $product->price }} р
+                                @if($product->price === null)
+                                    Цена не указана
+                                @else
+                                    {{ $product->price }} р
+                                @endif
                             </span>
                         </div>
 
@@ -537,7 +541,9 @@
                         </div>--}}
 
 
-                        <livewire:add-to-cart :product="$product" type="packs" />
+                        @if($product->variants->isNotEmpty())
+                            <livewire:add-to-cart :product="$product" type="packs" />
+                        @endif
 
 
 

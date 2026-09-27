@@ -89,7 +89,11 @@
                                 </div>
 
                                 <div class="search-result-price">
-                                    {{ $product->price }} ₽
+                                    @if($product->price === null)
+                                        Цена не указана
+                                    @else
+                                        {{ $product->price }} ₽
+                                    @endif
                                 </div>
 
                             </div>
@@ -265,7 +269,11 @@
                             </div>
 
                             <div class="search-result-price">
-                                {{ $product->price }} ₽
+                                @if($product->price === null)
+                                    Цена не указана
+                                @else
+                                    {{ $product->price }} ₽
+                                @endif
                             </div>
 
                         </div>
