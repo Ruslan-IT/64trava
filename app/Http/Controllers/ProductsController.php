@@ -18,7 +18,7 @@ class ProductsController
 
     public function show($slug){
 
-        $product = Product::where('slug', $slug)->firstOrFail();
+        $product = Product::visibleInCatalog()->where('slug', $slug)->firstOrFail();
         $categories = Category::orderBy('name')->get();
 
         return view('products.show', compact(

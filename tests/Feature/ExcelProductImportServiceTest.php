@@ -439,6 +439,9 @@ class ExcelProductImportServiceTest extends TestCase
         $this->assertSame('Не указана цена — варианты товара не созданы', $warning['message']);
         $this->assertSame(2, $warning['row']);
         $this->assertNull($product->price);
+        $this->assertTrue($product->is_visible);
+        $this->assertFalse($product->isListedInCatalog());
+        $this->assertNotNull(Product::query()->find($product->id));
         $this->assertSame(0, $product->variants()->count());
         $this->assertSame('A legendary sativa landrace', $product->description);
         $this->assertSame("Barney's Farm", $product->brand->name);
@@ -924,6 +927,57 @@ class ExcelProductImportServiceTest extends TestCase
         }
 
         return $this->importSheet([$headers, $row]);
+    }
+
+    public function test_missing_catalog_column_keeps_visibility_on_update(): void
+    {
+        $this->importSheet([$this->headers(), $this->sampleRow()]);
+        $product = Product::query()->first();
+        $product->is_visible = false;
+        $product->save();
+
+        $this->importSheet([$this->headers(), $this->sampleRow()]);
+
+        $this->assertFalse($product->fresh()->is_visible);
+    }
+
+    public function test_catalog_column_sets_visibility_without_using_price(): void
+    {
+        $headers = array_merge($this->headers(), ['Показывать в каталоге']);
+        $hidden = array_merge($this->sampleRow(), ['нет']);
+        $shown = array_merge($this->sampleRow(), ['да']);
+
+        foreach (['Price1', 'Price2', 'Fas1', 'Fas2', 'Art1', 'Art2'] as $field) {
+            $hidden[array_search($field, $headers, true)] = '';
+            $shown[array_search($field, $headers, true)] = '';
+        }
+
+        $this->importSheet([$headers, $hidden]);
+        $product = Product::query()->first();
+
+        $this->assertFalse($product->is_visible);
+        $this->assertNull($product->price);
+
+        $this->importSheet([$headers, $shown]);
+
+        $this->assertTrue($product->fresh()->is_visible);
+        $this->assertNull($product->fresh()->price);
+    }
+
+    public function test_semicolon_csv_uses_the_same_importer(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'csv');
+        $target = $path.'.csv';
+        rename($path, $target);
+        file_put_contents($target, "Name;Type;Brand;Art1;Fas1;Price1\nCsv Strain;Feminised;Csv Farm;SKU-CSV;3;100\n");
+
+        $result = app(ExcelProductImportService::class)->import($target, '');
+        $product = Product::query()->where('name', 'like', 'Csv Strain%')->first();
+
+        $this->assertSame(1, $result['imported']);
+        $this->assertNotNull($product);
+        $this->assertTrue($product->is_visible);
+        $this->assertSame('Csv Farm', $product->brand->name);
     }
 
     private function importSheet(array $rows): array

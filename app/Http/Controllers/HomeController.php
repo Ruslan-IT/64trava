@@ -16,25 +16,25 @@ class HomeController
 
 
         /*Один запрос в бд */
-        $products = Product::all();
+        $products = Product::visibleInCatalog()->get();
         $brands = Brand::all();
         $categories = Category::orderBy('name')->get();
         $tags = Tag::all();
 
 
-        $newProducts = Product::with(['brand', 'variants'])
+        $newProducts = Product::visibleInCatalog()->with(['brand', 'variants'])
             ->whereHas('categories', function ($query) {
                 $query->where('id', 7); // Новинки
             })
             ->get();
 
-        $productPopular = Product::whereHas('categories', function ($query) {
+        $productPopular = Product::visibleInCatalog()->whereHas('categories', function ($query) {
             $query->where('id', 11);//популярные
         })
             ->get()
             ->take(4);
 
-        $largePackProducts = Product::whereHas('categories', function ($query) {
+        $largePackProducts = Product::visibleInCatalog()->whereHas('categories', function ($query) {
             $query->where('id', 5);//крупные пачки
         })
             ->get()

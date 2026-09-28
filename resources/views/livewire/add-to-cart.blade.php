@@ -162,11 +162,11 @@
                                 <div class="product-pack-price">
                                     {{ number_format($variant->price, 0, '.', '') }}р
                                 </div>
+                                @if(\App\Models\Product::hasPublicValue($variant->old_price))
                                 <div class="product-pack-price-old-price">
                                     {{ number_format($variant->old_price, 0, '.', '') }} р
                                 </div>
 
-                                @if($variant->old_price)
                                     <div class="product-pack-old-price">
                                         {{ number_format($variant->old_price, 0, '.', '') }}р
                                     </div>

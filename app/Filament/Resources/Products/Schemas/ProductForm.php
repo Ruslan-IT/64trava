@@ -117,6 +117,10 @@ class ProductForm
                                     ->numeric()
                                     ->default(0),
 
+                                Toggle::make('is_visible')
+                                    ->label('Показывать в каталоге')
+                                    ->default(true),
+
                                 TextInput::make('rating')
                                     ->label('Рейтинг')
                                     ->numeric()

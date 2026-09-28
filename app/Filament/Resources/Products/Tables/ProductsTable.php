@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Models\Category;
+use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -29,6 +30,12 @@ class ProductsTable
                     ->searchable()
                     ->sortable(),
 
+                IconColumn::make('is_visible')
+                    ->label('В каталоге')
+                    ->getStateUsing(fn (Product $record): bool => $record->isListedInCatalog())
+                    ->boolean()
+                    ->tooltip(fn (Product $record): string => $record->catalogListingLabel()),
+
                 TextColumn::make('brand.name')
                     ->label('Производитель')
                     ->searchable()
@@ -44,14 +51,6 @@ class ProductsTable
                     ->label('Цена')
                     ->money('USD')
                     ->sortable(),
-                IconColumn::make('is_on_sale')
-                    ->boolean()
-                    ->label('Акция'),
-
-
-                IconColumn::make('is_promo')
-                    ->boolean()
-                    ->label('Промо'),
 
                 TextColumn::make('stock')
                     ->label('Остаток')

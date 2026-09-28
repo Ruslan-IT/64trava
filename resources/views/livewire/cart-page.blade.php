@@ -625,13 +625,16 @@
                                                 {{ $product->name }}
                                             </h3>
 
+                                            @if(\App\Models\Product::hasPublicValue($product->brand?->name))
                                             <div class="gift-product__name">
                                                 {{ $product->brand->name }}
                                             </div>
+                                            @endif
 
+                                            @if(\App\Models\Product::hasPublicValue($product->thc) || \App\Models\Product::hasPublicValue($product->height) || \App\Models\Product::hasPublicValue($product->seed_type))
                                             <div class="gift-product__attributes">
 
-                                                @if($product->thc)
+                                                @if(\App\Models\Product::hasPublicValue($product->thc))
                                                     <div class="gift-product__attribute">
 
                                                         <img
@@ -647,7 +650,7 @@
                                                     </div>
                                                 @endif
 
-                                                @if($product->height)
+                                                @if(\App\Models\Product::hasPublicValue($product->height))
                                                     <div class="gift-product__attribute gift-product__attribute--wide">
 
                                                         <img
@@ -663,13 +666,14 @@
                                                     </div>
                                                 @endif
 
-                                                @if($product->seed_type)
+                                                @if(\App\Models\Product::hasPublicValue($product->seed_type))
                                                     <div class="gift-product__attribute">
                                                         Тип семян: {{ $product->seed_type }}
                                                     </div>
                                                 @endif
 
                                             </div>
+                                            @endif
 
                                             <div class="gift-product__quantity">
 

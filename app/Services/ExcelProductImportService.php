@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use RuntimeException;
 
 class ExcelProductImportService
@@ -27,7 +28,7 @@ class ExcelProductImportService
     {
         $fallbackBrand = trim($brand);
 
-        $worksheet = IOFactory::load($file)->getActiveSheet();
+        $worksheet = $this->loadSpreadsheet($file)->getActiveSheet();
         $lastRow = max(1, (int) $worksheet->getHighestDataRow());
         $lastColumn = $worksheet->getHighestDataColumn() ?: 'A';
         $sheet = $worksheet->rangeToArray('A1:'.$lastColumn.$lastRow, null, true, true, false);
@@ -152,6 +153,12 @@ class ExcelProductImportService
             $product->description = $this->text($this->cell($cells, $headers, 'TXT1'));
             $product->full_description = $this->text($this->cell($cells, $headers, 'TXT2'));
             $product->excel_row = $excelRow;
+            $visibility = $this->catalogVisibility($cells, $headers);
+
+            if ($visibility !== null) {
+                $product->is_visible = $visibility;
+            }
+
             $product->save();
 
             $this->attachImages($product, $cells, $headers, $excelRow, $result);
@@ -176,6 +183,75 @@ class ExcelProductImportService
         }
 
         return $fallbackBrand !== '' ? $fallbackBrand : null;
+    }
+
+    private function loadSpreadsheet(string $file): Spreadsheet
+    {
+        if (strtolower(pathinfo($file, PATHINFO_EXTENSION)) !== 'csv') {
+            return IOFactory::load($file);
+        }
+
+        $reader = IOFactory::createReader('Csv');
+        $reader->setInputEncoding('UTF-8');
+        $reader->setDelimiter($this->csvDelimiter($file));
+        $reader->setEnclosure('"');
+
+        return $reader->load($file);
+    }
+
+    private function csvDelimiter(string $file): string
+    {
+        $line = '';
+        $handle = fopen($file, 'rb');
+
+        if ($handle !== false) {
+            $line = (string) fgets($handle);
+            fclose($handle);
+        }
+
+        $line = preg_replace('/^\xEF\xBB\xBF/', '', $line) ?? $line;
+        $counts = [
+            ',' => substr_count($line, ','),
+            ';' => substr_count($line, ';'),
+            "\t" => substr_count($line, "\t"),
+        ];
+        arsort($counts);
+        $delimiter = (string) array_key_first($counts);
+
+        return ($counts[$delimiter] ?? 0) > 0 ? $delimiter : ',';
+    }
+
+    /**
+     * @param  array<int, mixed>  $cells
+     * @param  array<string, int>  $headers
+     */
+    private function catalogVisibility(array $cells, array $headers): ?bool
+    {
+        foreach (['Показывать в каталоге', 'is_visible'] as $column) {
+            if (! array_key_exists($column, $headers)) {
+                continue;
+            }
+
+            $value = $this->text($this->cell($cells, $headers, $column));
+
+            if ($value === null) {
+                return null;
+            }
+
+            $normalized = mb_strtolower($value);
+
+            if (in_array($normalized, ['1', 'да', 'yes', 'true', 'вкл'], true)) {
+                return true;
+            }
+
+            if (in_array($normalized, ['0', 'нет', 'no', 'false', 'выкл'], true)) {
+                return false;
+            }
+
+            return null;
+        }
+
+        return null;
     }
 
     private function brandError(int $excelRow, array $headers): array

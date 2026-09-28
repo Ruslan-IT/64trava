@@ -20,7 +20,7 @@ class MobileProductSearch extends Component
             return;
         }
 
-        $this->products = Product::query()
+        $this->products = Product::visibleInCatalog()
             ->where('name', 'like', '%' . $search . '%')
             ->get();
     }

@@ -3,7 +3,7 @@
     <div class="product-image-wrapper">
 
         @if($product->image)
-            <a href="">
+            <a href="{{ route('product.show', $product->slug) }}">
                 <img
                     src="{{ asset('storage/' . $product->image) }}"
                     alt="{{ $product->name }}"
@@ -58,13 +58,15 @@
 
     </h3>
 
-    <div class="product-subtitle">
+   {{-- <div class="product-subtitle">
         {{ $product->brand->name  }}
-    </div>
+    </div>--}}
 
 
+    @if(\App\Models\Product::hasPublicValue($product->thc) || \App\Models\Product::hasPublicValue($product->seed_type) || \App\Models\Product::hasPublicValue($product->height) || \App\Models\Product::hasPublicValue($product->advantages))
     <div class="product-info">
 
+        @if(\App\Models\Product::hasPublicValue($product->thc))
         <div class="product-info-row">
 
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -87,11 +89,16 @@
             <span>{{ $product->thc  }}</span>
 
         </div>
+        @endif
 
+        @if(\App\Models\Product::hasPublicValue($product->seed_type) || \App\Models\Product::hasPublicValue($product->height))
         <div class="product-info-row tip">
+            @if(\App\Models\Product::hasPublicValue($product->seed_type))
             <div>
                 Тип семян: <span class="seed-type-active">A</span>/F/R
             </div>
+            @endif
+            @if(\App\Models\Product::hasPublicValue($product->height))
             <div class="product-info-row-el">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
                      xmlns="http://www.w3.org/2000/svg">
@@ -133,10 +140,13 @@
                 </svg>
                 <span>{{ $product->height  }}</span>
             </div>
+            @endif
 
         </div>
+        @endif
 
 
+        @if(\App\Models\Product::hasPublicValue($product->advantages))
         <div class="product-info-row">
 
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
@@ -185,8 +195,10 @@
             <span>{{ $product->advantages  }}</span>
 
         </div>
+        @endif
 
     </div>
+    @endif
 
 
     @livewire('add-to-cart', ['product' => $product], key('product-' . $product->id))

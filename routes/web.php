@@ -8,6 +8,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\SeedbanksController;
 use App\Services\BonusService;
 use App\Services\CartService;
@@ -139,6 +140,8 @@ Route::get('/clear-cart', function () {
 
 
 
+
+Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
 
 Route::get('/telegram-test', function () {
     $token = config('services.telegram.bot_token');

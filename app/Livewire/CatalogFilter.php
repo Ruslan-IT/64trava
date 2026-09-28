@@ -197,6 +197,7 @@ class CatalogFilter extends Component
     public function render()
     {
         $query = Product::query()
+            ->visibleInCatalog()
             ->with(['brand', 'categories', 'tags']);
 
         if ($this->currentCategory) {
@@ -366,10 +367,10 @@ class CatalogFilter extends Component
         */
 
         $seedTypeCounts = [
-            'F' => Product::where('seed_type', 'F')->count(),
-            'A' => Product::where('seed_type', 'A')->count(),
-            'R' => Product::where('seed_type', 'R')->count(),
-            'AR' => Product::where('seed_type', 'AR')->count(),
+            'F' => Product::visibleInCatalog()->where('seed_type', 'F')->count(),
+            'A' => Product::visibleInCatalog()->where('seed_type', 'A')->count(),
+            'R' => Product::visibleInCatalog()->where('seed_type', 'R')->count(),
+            'AR' => Product::visibleInCatalog()->where('seed_type', 'AR')->count(),
         ];
 
         /*
@@ -381,9 +382,9 @@ class CatalogFilter extends Component
         $sativa = Product::sativaValueSql();
 
         $genotypeCounts = [
-            'sativa' => Product::whereRaw("$sativa > 50")->count(),
-            'balance' => Product::whereRaw("$sativa = 50")->count(),
-            'indica' => Product::whereRaw("$sativa < 50")->count(),
+            'sativa' => Product::visibleInCatalog()->whereRaw("$sativa > 50")->count(),
+            'balance' => Product::visibleInCatalog()->whereRaw("$sativa = 50")->count(),
+            'indica' => Product::visibleInCatalog()->whereRaw("$sativa < 50")->count(),
         ];
 
         if ($this->currentCategory) {
@@ -410,7 +411,7 @@ class CatalogFilter extends Component
             'products' => $products,
             'seedTypeCounts' => $seedTypeCounts,
             'genotypeCounts' => $genotypeCounts,
-            'cbdCount' => Product::whereNotNull('cbd')->where('cbd', '>', 0)->count(),
+            'cbdCount' => Product::visibleInCatalog()->whereNotNull('cbd')->where('cbd', '>', 0)->count(),
             'tasteOptions' => $this->tokenOptions('taste'),
             'effectOptions' => $this->tokenOptions('effect'),
             'aromaOptions' => $this->tokenOptions('aroma'),
@@ -556,7 +557,7 @@ class CatalogFilter extends Component
     {
         $counts = [];
 
-        $rows = Product::query()
+        $rows = Product::visibleInCatalog()
             ->whereNotNull($column)
             ->where($column, '!=', '')
             ->pluck($column);
@@ -574,7 +575,7 @@ class CatalogFilter extends Component
 
     protected function harvestOptions(): array
     {
-        return Product::query()
+        return Product::visibleInCatalog()
             ->whereNotNull('harvest')
             ->where('harvest', '!=', '')
             ->selectRaw('harvest, COUNT(*) as aggregate')

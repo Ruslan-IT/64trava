@@ -18,6 +18,7 @@ class CatalogController
 
 
         $query = Product::query()
+            ->visibleInCatalog()
             ->with(['brand', 'categories', 'tags']);
 
         /*
@@ -155,6 +156,7 @@ class CatalogController
         $tag = null;
 
         $products = Product::query()
+            ->visibleInCatalog()
             ->with(['brand', 'categories', 'tags'])
             ->where('brand_id', $brand->id)
             ->latest()
@@ -191,6 +193,7 @@ class CatalogController
 
 
         $products = Product::query()
+            ->visibleInCatalog()
             ->with(['brand', 'categories', 'tags'])
             ->whereHas('tags', function ($query) use ($tag) {
                 $query->where('tags.id', $tag->id);

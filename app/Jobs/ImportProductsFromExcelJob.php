@@ -3,12 +3,15 @@
 namespace App\Jobs;
 
 use App\Services\ExcelProductImportService;
+use App\Services\TelegramService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 class ImportProductsFromExcelJob implements ShouldQueue
 {
@@ -25,6 +28,18 @@ class ImportProductsFromExcelJob implements ShouldQueue
         public string $brand = '',
     ) {}
 
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [
+            (new WithoutOverlapping('product-excel-import'))
+                ->releaseAfter(60)
+                ->expireAfter(7500),
+        ];
+    }
+
     public function handle(ExcelProductImportService $products): void
     {
         $startedAt = now()->toIso8601String();
@@ -36,6 +51,14 @@ class ImportProductsFromExcelJob implements ShouldQueue
 
         $result = $products->import($absolute, $this->brand);
         $reportPath = 'imports/reports/'.Str::uuid()->toString().'.json';
+        $noticePath = $this->path.'.telegram.json';
+        $notice = null;
+
+        if (Storage::disk('local')->exists($noticePath)) {
+            $decoded = json_decode((string) Storage::disk('local')->get($noticePath), true);
+            $notice = is_array($decoded) ? $decoded : null;
+        }
+
         $report = [
             'file' => $this->path,
             'imported' => $result['imported'] ?? 0,
@@ -48,6 +71,13 @@ class ImportProductsFromExcelJob implements ShouldQueue
             'started_at' => $startedAt,
             'finished_at' => now()->toIso8601String(),
         ];
+
+        if (is_array($notice) && ($notice['chat_id'] ?? '') !== '') {
+            $report['telegram'] = [
+                'chat_id' => (string) $notice['chat_id'],
+                'original_name' => (string) ($notice['original_name'] ?? basename($this->path)),
+            ];
+        }
 
         Storage::disk('local')->put(
             $reportPath,
@@ -70,5 +100,14 @@ class ImportProductsFromExcelJob implements ShouldQueue
         ]);
 
         Storage::disk('local')->delete($this->path);
+        Storage::disk('local')->delete($noticePath);
+
+        try {
+            app(TelegramService::class)->sendImportReport($report);
+        } catch (Throwable $exception) {
+            Log::error('Не удалось отправить результат импорта в Telegram', [
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 }

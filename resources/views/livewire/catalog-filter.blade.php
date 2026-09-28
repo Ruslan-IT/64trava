@@ -956,10 +956,7 @@
                 <!-- товары -->
             </div>
 
-
             <div class="products-grid-catalog">
-
-
 
                   @forelse($products as $product)
                       @include('components.product-card', ['product' => $product])

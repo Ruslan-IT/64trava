@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
@@ -60,6 +61,7 @@ class Product extends Model
         'seo_keywords',
 
         'excel_row',
+        'is_visible',
     ];
 
     protected $casts = [
@@ -68,6 +70,7 @@ class Product extends Model
         'is_popular' => 'boolean',
         'is_on_sale' => 'boolean',
         'is_promo' => 'boolean',
+        'is_visible' => 'boolean',
 
         'price' => 'decimal:2',
         'old_price' => 'decimal:2',
@@ -81,6 +84,59 @@ class Product extends Model
     ];
 
 
+
+    public static function hasPublicValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        if (is_string($value)) {
+            $value = trim($value);
+
+            if ($value === '') {
+                return false;
+            }
+
+            if (! is_numeric($value)) {
+                return true;
+            }
+        }
+
+        return is_numeric($value) && (float) $value != 0.0;
+    }
+
+    public function scopeVisibleInCatalog(Builder $query): Builder
+    {
+        return $query
+            ->where('is_visible', true)
+            ->whereNotNull('price');
+    }
+
+    public function isListedInCatalog(): bool
+    {
+        return $this->is_visible && $this->price !== null;
+    }
+
+    public function catalogListingLabel(): string
+    {
+        if ($this->isListedInCatalog()) {
+            return 'В каталоге';
+        }
+
+        $hidden = ! $this->is_visible;
+        $missingPrice = $this->price === null;
+
+        if ($hidden && $missingPrice) {
+            return 'Скрыт вручную, нет цены';
+        }
+
+        if ($hidden) {
+            return 'Скрыт вручную';
+        }
+
+        return 'Нет цены';
+    }
 
     public function brand()
     {

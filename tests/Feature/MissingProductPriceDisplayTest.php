@@ -56,13 +56,10 @@ class MissingProductPriceDisplayTest extends TestCase
 
         Livewire::test(ProductSearch::class)
             ->set('search', 'Null Price Display')
-            ->assertSee('Цена не указана')
+            ->assertDontSee('Null Price Display Strain')
             ->assertDontSee('0 ₽');
 
-        $this->get(route('product.show', $product->slug))
-            ->assertOk()
-            ->assertSee('Цена не указана')
-            ->assertDontSee('Добавить в корзину')
-            ->assertDontSee('0р');
+        $this->assertNotNull(Product::query()->find($product->id));
+        $this->get(route('product.show', $product->slug))->assertNotFound();
     }
 }

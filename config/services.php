@@ -38,6 +38,8 @@ return [
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'manager_chat_id' => env('TELEGRAM_MANAGER_CHAT_ID'),
+        'import_user_ids' => env('TELEGRAM_IMPORT_USER_IDS'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
 ];

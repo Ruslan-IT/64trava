@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Jobs\ImportProductsFromExcelJob;
 use App\Services\ExcelProductImportService;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
 use RuntimeException;
@@ -72,5 +74,60 @@ class ExcelProductImportJobTest extends TestCase
 
         (new ImportProductsFromExcelJob('imports/missing.xlsx', ''))
             ->handle($this->app->make(ExcelProductImportService::class));
+    }
+
+    public function test_import_cannot_overlap_another_import(): void
+    {
+        $middleware = (new ImportProductsFromExcelJob('imports/catalog.xlsx'))->middleware();
+
+        $this->assertInstanceOf(WithoutOverlapping::class, $middleware[0]);
+        $this->assertSame('product-excel-import', $middleware[0]->key);
+        $this->assertSame(7500, $middleware[0]->expiresAfter);
+        $this->assertSame(60, $middleware[0]->releaseAfter);
+    }
+
+    public function test_job_sends_the_import_result_to_telegram(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('imports/catalog.csv', 'csv');
+        Storage::disk('local')->put('imports/catalog.csv.telegram.json', json_encode([
+            'chat_id' => '955',
+            'original_name' => 'products.csv',
+        ], JSON_UNESCAPED_UNICODE));
+        config(['services.telegram.bot_token' => 'test-token']);
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true]),
+        ]);
+
+        $mock = Mockery::mock(ExcelProductImportService::class);
+        $mock->shouldReceive('import')->once()->andReturn([
+            'imported' => 10,
+            'updated' => 62,
+            'skipped' => 0,
+            'errors' => [],
+            'warnings' => [],
+            'photo_retry' => [['url' => 'https://cdn.test/missing.jpg']],
+            'photos' => [
+                ['saved' => true],
+                ['saved' => false],
+            ],
+        ]);
+
+        (new ImportProductsFromExcelJob('imports/catalog.csv', ''))->handle($mock);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'sendMessage')
+                && $request['chat_id'] === '955'
+                && str_contains($request['text'], 'Импорт завершён.')
+                && str_contains($request['text'], 'Файл: products.csv')
+                && str_contains($request['text'], 'Товаров в файле: 72')
+                && str_contains($request['text'], 'Создано: 10')
+                && str_contains($request['text'], 'Обновлено: 62')
+                && str_contains($request['text'], 'Загружено: 1')
+                && str_contains($request['text'], 'Не загружено: 1')
+                && str_contains($request['text'], 'Ошибок импорта: 0')
+                && str_contains($request['text'], 'Повторная загрузка отсутствующих фотографий поставлена в очередь');
+        });
+        $this->assertFalse(Storage::disk('local')->exists('imports/catalog.csv'));
     }
 }

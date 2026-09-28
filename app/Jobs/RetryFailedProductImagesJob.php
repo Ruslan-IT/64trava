@@ -3,11 +3,13 @@
 namespace App\Jobs;
 
 use App\Services\ExcelProductImportService;
+use App\Services\TelegramService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Throwable;
 
 class RetryFailedProductImagesJob implements ShouldQueue
 {
@@ -54,6 +56,19 @@ class RetryFailedProductImagesJob implements ShouldQueue
             'report' => $this->reportPath,
             'remaining' => count($outcome['photo_retry']),
         ]);
+
+        $finished = $outcome['photo_retry'] === []
+            || ($this->job !== null && $this->attempts() >= $this->tries);
+
+        if ($finished) {
+            try {
+                app(TelegramService::class)->sendImportReport($report, true);
+            } catch (Throwable $exception) {
+                Log::error('Не удалось отправить результат повторной загрузки фотографий в Telegram', [
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         if ($outcome['photo_retry'] !== [] && $this->job !== null && $this->attempts() < $this->tries) {
             throw new RuntimeException('Остались фотографии для повторной загрузки.');

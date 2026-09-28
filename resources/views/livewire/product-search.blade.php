@@ -82,9 +82,11 @@
                                         </a>
                                     </div>
 
+                                    @if(\App\Models\Product::hasPublicValue($product->brand?->name))
                                     <div class="search-result-brand">
                                         {{ $product->brand?->name ?? '' }}
                                     </div>
+                                    @endif
 
                                 </div>
 
@@ -262,9 +264,11 @@
                                     </a>
                                 </div>
 
+                                @if(\App\Models\Product::hasPublicValue($product->brand?->name))
                                 <div class="search-result-brand">
                                     {{ $product->brand?->name ?? '' }}
                                 </div>
+                                @endif
 
                             </div>
 

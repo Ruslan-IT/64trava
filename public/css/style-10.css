@@ -5200,7 +5200,7 @@ input, button {
     align-items: center;
     justify-content: space-between;
 
-    margin-top: 15px;
+    margin: 15px 0 20px 0;
 }
 
 .product-detail-prices {
@@ -6129,6 +6129,7 @@ input, button {
 
 .product-description p {
     margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .product-description h1,
