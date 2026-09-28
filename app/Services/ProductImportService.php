@@ -34,9 +34,13 @@ class ProductImportService
                 'variants.*.stock' => ['nullable', 'integer', 'min:0'],
             ])->validate();
 
-            $brand = Brand::query()->firstOrCreate([
-                'name' => $row['brand'],
-            ]);
+            $brandName = trim($row['brand']);
+            $brandSlug = Str::slug($brandName);
+
+            $brand = Brand::query()->firstOrCreate(
+                ['slug' => $brandSlug],
+                ['name' => $brandName]
+            );
 
             $name = $this->productName($row['strain'], $row['seed_type'], $brand->name);
             $slug = Str::slug($name);
