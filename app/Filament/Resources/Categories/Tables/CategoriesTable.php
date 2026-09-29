@@ -16,11 +16,11 @@ class CategoriesTable
         return $table
             ->columns([
 
-                ImageColumn::make('image')
+               /* ImageColumn::make('image')
                     ->label('Изображение')
                     ->disk('public')
                     ->size(50)
-                    ->circular(),
+                    ->circular(),*/
 
                 TextColumn::make('name')
                     ->label('Название')

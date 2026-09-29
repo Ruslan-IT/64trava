@@ -58,7 +58,7 @@ class CategoryForm
                 |--------------------------------------------------------------------------
                 */
 
-                Section::make('Изображение')
+               /* Section::make('Изображение')
                     ->schema([
 
                         FileUpload::make('image')
@@ -71,7 +71,7 @@ class CategoryForm
                             ->columnSpanFull(),
 
                     ])
-                    ->columnSpanFull(),
+                    ->columnSpanFull(),*/
 
 
                 /*

@@ -1,7 +1,7 @@
 <div class="catalog-layout ">
     <aside class="catalog-filter ">
 
-        <button type="button" class="catalog-filter-close">
+       {{-- <button type="button" class="catalog-filter-close">
             ×
         </button>
 
@@ -12,7 +12,7 @@
                 placeholder="Поиск по названию"
                 wire:model.live.debounce.400ms="search"
             >
-        </div>
+        </div>--}}
 
 
     <div class="filter-group filter-group-flowering">
@@ -773,8 +773,6 @@
 
                     <div class="catalog-welcome-image">
 
-
-
                             <img
                                 src="{{ asset('storage/' . $brand->logo) }}"
                                 alt="{{ $brand->name }}"
@@ -806,7 +804,7 @@
 
 
                     </div>
-                        
+
                     @endif
 
                     <div class="catalog-welcome-content">
