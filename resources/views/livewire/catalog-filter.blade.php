@@ -769,16 +769,27 @@
 
                 <div class="catalog-welcome">
 
+                    @if($brand && $brand->logo)
+
                     <div class="catalog-welcome-image">
 
-                        @if($brand && $brand->logo)
+
 
                             <img
                                 src="{{ asset('storage/' . $brand->logo) }}"
                                 alt="{{ $brand->name }}"
                             >
 
-                        @elseif($currentCategory && $currentCategory->image)
+                       {{-- @else
+5
+                            <img
+                                src="{{ asset('images/no-img2.png') }}"
+                                alt="Изображение отсутствует"
+                            >--}}
+
+
+
+                        {{--@elseif($currentCategory && $currentCategory->image)
 
                             <img
                                 src="{{ asset('storage/' . $currentCategory->image) }}"
@@ -791,17 +802,12 @@
                                 src="{{ asset('storage/' . $tag->image) }}"
                                 alt="{{ $tag->name }}"
                             >
+--}}
 
-                        @else
-
-                            <img
-                                src="{{ asset('images/no-img2.png') }}"
-                                alt="Изображение отсутствует"
-                            >
-
-                        @endif
 
                     </div>
+                        
+                    @endif
 
                     <div class="catalog-welcome-content">
 

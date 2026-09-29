@@ -9745,4 +9745,26 @@ input, button {
         flex-wrap: wrap;
         gap: 15px;
     }
+    .product-cart-row {
+        left: 0;
+    }
+    .product-order-block-right {
+        margin: 0;
+        position: relative;
+        top: 0;
+        min-width: 0;
+    }
+    .product-tabs-buttons {
+        gap: 10px;
+    }
+
+    .product-tabs-button {
+        width: 90px;
+        height: 40px;
+        font-size: 12px;
+    }
+
+    .product-description p {
+        font-size: 14px;
+    }
 }
