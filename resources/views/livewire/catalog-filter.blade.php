@@ -15,12 +15,17 @@
         </div>
 
 
+    <div class="filter-group filter-group-flowering">
 
+        <button type="button" class="filter-group-header">
+            <span>Содержание ТГК </span>
 
+            <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
+                <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+        </button>
 
         <div class="filter-percent-values">
-
-
 
             <div class="filter-percent-value {{ $activeThcHandle === 'min' ? 'active' : '' }}">
                 {{ $thcMin ?? 1 }}%
@@ -65,6 +70,10 @@
             >
 
         </div>
+    </div>
+
+
+
 
         <div class="filter-divider"></div>
 
