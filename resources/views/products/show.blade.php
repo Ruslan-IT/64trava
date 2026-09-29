@@ -500,7 +500,7 @@
 
                                 <div class="product-detail-feature-text">
                                     <span>ВЫСОТА В ПОМЕЩЕНИИ</span>
-                                    <strong>{{ $product->indoor_height }}</strong>
+                                    <strong>{{ $product->indoor_height }} см</strong>
                                 </div>
                             </div>
                             @endif
@@ -531,7 +531,7 @@
 
                                 <div class="product-detail-feature-text">
                                     <span>УРОЖАЙНОСТЬ В ПОМЕШЕНИИ</span>
-                                    <strong>{{ $product->yield }}</strong>
+                                    <strong>{{ $product->yield }} гр.м²/800 гр. куст</strong>
                                 </div>
                             </div>
                             @endif
@@ -567,7 +567,7 @@
 
                                 <div class="product-detail-feature-text">
                                     <span>ВЫСОТА НА УЛИЦЕ</span>
-                                    <strong>{{ $product->height }}</strong>
+                                    <strong>{{ $product->height }} см </strong>
                                 </div>
                             </div>
                             @endif
@@ -598,7 +598,7 @@
 
                                 <div class="product-detail-feature-text">
                                     <span>УРОЖАЙНОСТЬ НА УЛИЦЕ</span>
-                                    <strong>{{ $product->outdoor_yield }}</strong>
+                                    <strong>{{ $product->outdoor_yield }} г/куст</strong>
                                 </div>
                             </div>
                             @endif
