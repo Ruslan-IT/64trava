@@ -1,4 +1,4 @@
-<article class="product-card">
+<article class="product-card" @if(!empty($catalogWireKey ?? null)) wire:key="catalog-product-{{ $product->id }}" @endif>
 
     <div class="product-image-wrapper">
 

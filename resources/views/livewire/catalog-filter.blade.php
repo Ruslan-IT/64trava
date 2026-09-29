@@ -25,11 +25,11 @@
 
         <div class="filter-percent-values">
 
-            <div class="filter-percent-value {{ $activeThcHandle === 'min' ? 'active' : '' }}">
+            <div class="filter-percent-value">
                 {{ $thcMin ?? 1 }}%
             </div>
 
-            <div class="filter-percent-value {{ $activeThcHandle === 'max' ? 'active' : '' }}">
+            <div class="filter-percent-value">
                 {{ $thcMax ?? 60 }}%
             </div>
 
@@ -52,8 +52,7 @@
                 min="1"
                 max="60"
                 value="{{ $thcMin ?? 1 }}"
-                wire:model.live="thcMin"
-                wire:mousedown="setThcMin"
+                wire:model.live.change="thcMin"
                 class="filter-thc-input filter-thc-min"
             >
 
@@ -62,8 +61,7 @@
                 min="1"
                 max="60"
                 value="{{ $thcMax ?? 60 }}"
-                wire:model.live="thcMax"
-                wire:mousedown="setThcMax"
+                wire:model.live.change="thcMax"
                 class="filter-thc-input filter-thc-max"
             >
 
@@ -931,9 +929,9 @@
             <div class="products-grid-catalog">
 
                   @forelse($products as $product)
-                      @include('components.product-card', ['product' => $product])
+                      @include('components.product-card', ['product' => $product, 'catalogWireKey' => true])
                   @empty
-                      <p class="catalog-empty">Товары не найдены</p>
+                      <p class="catalog-empty" wire:key="catalog-empty">Товары не найдены</p>
                   @endforelse
 
             </div>
@@ -981,6 +979,65 @@
                 header.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
         };
+
+        const markThcHandle = (input) => {
+            const values = input.closest('.filter-group')?.querySelectorAll('.filter-percent-value');
+
+            if (!values || values.length < 2) {
+                return;
+            }
+
+            const index = input.classList.contains('filter-thc-max') ? 1 : 0;
+
+            values.forEach((value, valueIndex) => {
+                value.classList.toggle('active', valueIndex === index);
+            });
+        };
+
+        document.addEventListener('pointerdown', (event) => {
+            const input = event.target.closest?.('.filter-thc-input');
+
+            if (!input || !input.closest('.catalog-filter')) {
+                return;
+            }
+
+            markThcHandle(input);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.catalog-filter .filter-reset')) {
+                return;
+            }
+
+            document.querySelectorAll('.filter-group-flowering .filter-percent-value.active')
+                .forEach((value) => value.classList.remove('active'));
+        });
+
+        const preserveFilterDom = () => {
+            const hook = () => {
+                Livewire.hook('morph.updating', ({ el, toEl, component }) => {
+                    if (!component || component.name !== 'catalog-filter' || !el.classList || !toEl.classList) {
+                        return;
+                    }
+
+                    if (el.classList.contains('filter-group') && el.classList.contains('is-open')) {
+                        toEl.classList.add('is-open');
+                    }
+
+                    if (el.classList.contains('filter-percent-value') && el.classList.contains('active')) {
+                        toEl.classList.add('active');
+                    }
+                });
+            };
+
+            if (window.Livewire) {
+                hook();
+            } else {
+                document.addEventListener('livewire:init', hook, { once: true });
+            }
+        };
+
+        preserveFilterDom();
 
         document.addEventListener('click', (event) => {
             const header = event.target.closest('.filter-group-header');

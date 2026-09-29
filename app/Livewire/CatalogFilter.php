@@ -36,8 +36,6 @@ class CatalogFilter extends Component
     #[Url(as: 'genotype', except: null)]
     public ?string $genotype = null;
 
-    public string $activeThcHandle = '';
-
     #[Url(as: 'height_min', except: 70)]
     public ?int $heightMin = 70;
 
@@ -140,16 +138,6 @@ class CatalogFilter extends Component
         $this->resetPage();
     }
 
-    public function setThcMin(): void
-    {
-        $this->activeThcHandle = 'min';
-    }
-
-    public function setThcMax(): void
-    {
-        $this->activeThcHandle = 'max';
-    }
-
     public function resetFilters(): void
     {
         $this->search = '';
@@ -179,8 +167,6 @@ class CatalogFilter extends Component
         $this->aromas = [];
         $this->harvests = [];
         $this->sort = '';
-
-        $this->activeThcHandle = '';
 
         $this->resetPage();
 
