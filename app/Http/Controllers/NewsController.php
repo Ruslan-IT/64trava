@@ -18,10 +18,12 @@ class NewsController
             ->get();
 
 
+        $categories = Category::query()
+            ->orderBy('name')
+            ->get();
 
 
-
-        return view('news.index', compact('news'));
+        return view('news.index', compact('news', 'categories'));
 
     }
 

@@ -79,7 +79,7 @@
                 @foreach($news as $new)
 
                     @php
-                        $categories = [
+                        $newsCategoryLabels = [
                             'new' => [
                                 'name' => 'Новинки',
                                 'class' => 'category-new',
@@ -94,7 +94,7 @@
                             ],
                         ];
 
-                        $category = $categories[$new->category] ?? $categories['info'];
+                        $newsCategory = $newsCategoryLabels[$new->category] ?? $newsCategoryLabels['info'];
                     @endphp
 
                     <article class="news-card">
@@ -110,7 +110,7 @@
 
                         <div class="news-card-meta">
 
-                            <span class="news-card-category {{ $category['class'] }}">{{ $category['name'] }}</span>
+                            <span class="news-card-category {{ $newsCategory['class'] }}">{{ $newsCategory['name'] }}</span>
 
                             <time class="news-card-date" datetime="{{ $new->published_at?->format('Y-m-d') }}">{{ $new->formatted_date }}</time>
 

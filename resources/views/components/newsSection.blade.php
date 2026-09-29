@@ -37,7 +37,7 @@
 
 
                 @php
-                    $categories = [
+                    $newsCategoryLabels = [
                         'new' => [
                             'name' => 'Новинки',
                             'class' => 'category-new',
@@ -51,15 +51,13 @@
                             'class' => 'category-facts',
                         ],
                     ];
-
-
                 @endphp
 
                 @foreach($newsBlock as $new)
 
 
                     @php
-                        $category = $categories[$new->category] ?? $categories['info'];
+                        $newsCategory = $newsCategoryLabels[$new->category] ?? $newsCategoryLabels['info'];
                     @endphp
 
 
@@ -67,8 +65,8 @@
                         <img src="{{ asset('storage/' . $new->image) }}" alt="">
 
                         <div class="news-card-meta">
-                                    <span class="news-card-category category- {{ $category['class'] }}">
-                                        {{ $category['name'] }}
+                                    <span class="news-card-category category- {{ $newsCategory['class'] }}">
+                                        {{ $newsCategory['name'] }}
                                     </span>
 
                             <time datetime="{{ $new->published_at?->format('Y-m-d') }}">

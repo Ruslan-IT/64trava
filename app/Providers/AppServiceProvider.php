@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\FooterSetting;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
                 'variants' => $variants,
                 'cartTotal' => $cartTotal,
                 'cartCount' => $cartCount,
+                'footerSetting' => FooterSetting::current(),
             ]);
         });
     }
