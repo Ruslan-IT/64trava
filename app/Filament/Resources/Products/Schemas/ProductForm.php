@@ -249,10 +249,10 @@ class ProductForm
                                     ->placeholder('Mexican x Colombian x Thai x Afghan')
                                     ->nullable(),
 
-                                TextInput::make('taste')
+                              /*  TextInput::make('taste')
                                     ->label('Вкус')
                                     ->placeholder('цитрус, кофе, хвоя и древесный')
-                                    ->nullable(),
+                                    ->nullable(),*/
 
                                 TextInput::make('effect')
                                     ->label('Эффект')
@@ -294,10 +294,10 @@ class ProductForm
                                     ->placeholder('October 2nd-3rd week')
                                     ->nullable(),
 
-                                TextInput::make('country')
+                                /*TextInput::make('country')
                                     ->label('Страна')
                                     ->placeholder('США')
-                                    ->nullable(),
+                                    ->nullable(),*/
 
                                 Textarea::make('advantages')
                                     ->label('Преимущества')
