@@ -201,7 +201,7 @@
                     buttons.forEach((button, index) => {
 
                         button.style.display =
-                            index < visibleCount
+                            index < visibleCount || button.classList.contains('active')
                                 ? ''
                                 : 'none';
 

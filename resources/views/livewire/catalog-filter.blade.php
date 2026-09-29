@@ -20,9 +20,7 @@
         <button type="button" class="filter-group-header">
             <span>Содержание ТГК </span>
 
-            <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
+            <span class="filter-arrow" aria-hidden="true"></span>
         </button>
 
         <div class="filter-percent-values">
@@ -85,9 +83,7 @@
             <button type="button" class="filter-group-header">
                 <span>Сведение</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-options">
@@ -183,9 +179,7 @@
             <button type="button" class="filter-group-header">
                 <span>Период цветения</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-subtitle">
@@ -247,9 +241,7 @@
             <button type="button" class="filter-group-header">
                 <span>Генотип</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-genotype-list">
@@ -330,9 +322,7 @@
             <button type="button" class="filter-group-header">
                 <span>Вкус</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-genotype-list">
@@ -359,9 +349,7 @@
             <button type="button" class="filter-group-header">
                 <span>Эффект</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-genotype-list">
@@ -388,9 +376,7 @@
             <button type="button" class="filter-group-header">
                 <span>Аромат</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-genotype-list">
@@ -418,9 +404,7 @@
             <button type="button" class="filter-group-header">
                 <span>Генотип</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-genotype-list bot">
@@ -548,19 +532,7 @@
 
                 <span>Высота Outdoor</span>
 
-                <svg
-                    class="filter-arrow"
-                    width="14"
-                    height="8"
-                    viewBox="0 0 14 8"
-                    fill="none"
-                >
-                    <path
-                        d="M1 7L7 1L13 7"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                    />
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
 
             </button>
 
@@ -621,9 +593,7 @@
             <button type="button" class="filter-group-header">
                 <span>Высота Indoor</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-height-values">
@@ -653,9 +623,7 @@
             <button type="button" class="filter-group-header">
                 <span>Урожайность Indoor</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-height-values">
@@ -685,9 +653,7 @@
             <button type="button" class="filter-group-header">
                 <span>Урожайность Outdoor</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-height-values">
@@ -717,9 +683,7 @@
             <button type="button" class="filter-group-header">
                 <span>Сбор урожая</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-genotype-list">
@@ -756,9 +720,7 @@
             <button type="button" class="filter-group-header">
                 <span>CBD</span>
 
-                <svg class="filter-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none">
-                    <path d="M1 7L7 1L13 7" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="filter-arrow" aria-hidden="true"></span>
             </button>
 
             <div class="filter-options">
@@ -866,13 +828,14 @@
             @endif
             <div class="catalog-category-buttons">
 
-                <a href="{{ route('catalog.index') }}" class="category-button">
+                <a href="{{ route('catalog.index') }}"
+                   class="category-button{{ ! $currentCategory && ! $brand && ! $tag ? ' active' : '' }}">
                     Все товары
                 </a>
 
                 @foreach($categories as $category)
                     <a href="{{ route('catalog.category', $category->slug) }}"
-                       class="category-button">
+                       class="category-button{{ $currentCategory && mb_strtolower(trim($currentCategory->name)) === mb_strtolower(trim($category->name)) ? ' active' : '' }}">
                         {{ $category->name }}
                     </a>
                 @endforeach
@@ -996,5 +959,75 @@
 
 </div>
 
+@script
+<script>
+    if (!window.__catalogFilterAccordion) {
+        window.__catalogFilterAccordion = true;
 
+        const openFilters = new Set();
+
+        const headers = () => document.querySelectorAll('.catalog-filter .filter-group-header');
+
+        const applyOpenFilters = () => {
+            headers().forEach((header, index) => {
+                const group = header.closest('.filter-group');
+
+                if (!group) {
+                    return;
+                }
+
+                const open = openFilters.has(index);
+                group.classList.toggle('is-open', open);
+                header.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        };
+
+        document.addEventListener('click', (event) => {
+            const header = event.target.closest('.filter-group-header');
+
+            if (!header || !header.closest('.catalog-filter')) {
+                return;
+            }
+
+            const group = header.closest('.filter-group');
+
+            if (!group) {
+                return;
+            }
+
+            const index = Array.from(headers()).indexOf(header);
+
+            if (index < 0) {
+                return;
+            }
+
+            const open = !group.classList.contains('is-open');
+            group.classList.toggle('is-open', open);
+            header.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+            if (open) {
+                openFilters.add(index);
+            } else {
+                openFilters.delete(index);
+            }
+        });
+
+        const restoreAfterLivewire = () => {
+            Livewire.hook('commit', ({ succeed }) => {
+                succeed(() => {
+                    setTimeout(applyOpenFilters);
+                });
+            });
+        };
+
+        if (window.Livewire) {
+            restoreAfterLivewire();
+        } else {
+            document.addEventListener('livewire:init', restoreAfterLivewire, { once: true });
+        }
+
+        applyOpenFilters();
+    }
+</script>
+@endscript
 

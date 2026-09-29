@@ -403,9 +403,7 @@ class CatalogFilter extends Component
             });
         }
 
-        $categories = Category::query()
-            ->orderBy('name')
-            ->get();
+        $categories = $this->categoryButtons();
 
         return view('livewire.catalog-filter', [
             'products' => $products,
@@ -423,6 +421,31 @@ class CatalogFilter extends Component
             'categories' => $categories,
             'catalogInfo' => $this->catalogInfo,
         ]);
+    }
+
+    /**
+     * Кнопки каталога: одно название — одна категория.
+     * Из одноимённых строк остаётся та, к которой привязано больше товаров,
+     * а при равенстве — более ранняя запись.
+     */
+    protected function categoryButtons()
+    {
+        return Category::query()
+            ->withCount('products')
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (Category $category) => mb_strtolower(trim($category->name)))
+            ->map(function ($group) {
+                return $group
+                    ->sortBy([
+                        ['products_count', 'desc'],
+                        ['id', 'asc'],
+                    ])
+                    ->first();
+            })
+            ->sortBy(fn (Category $category) => mb_strtolower(trim($category->name)))
+            ->values();
     }
 
     public function mount($currentCategory = null, $brand = null, $tag = null, $catalogInfo = null): void

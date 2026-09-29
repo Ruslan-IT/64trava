@@ -768,7 +768,8 @@ input, button {
 }
 
 
-.category-button:hover {
+.category-button:hover,
+.category-button.active {
     background-image: url('/images/icon/button.png');
     background-position: center;
     background-size: cover;
@@ -4267,8 +4268,48 @@ input, button {
     cursor: pointer;
 }
 
+.filter-group:not(.is-open) > .filter-group-header ~ * {
+    display: none;
+}
+
 .filter-arrow {
+    position: relative;
+    display: block;
+    width: 14px;
+    height: 8px;
+    flex: 0 0 14px;
+}
+
+.filter-arrow::before,
+.filter-arrow::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    width: 8px;
+    height: 1.5px;
+    background: currentColor;
+    border-radius: 1px;
     transition: transform 0.3s ease;
+}
+
+.filter-arrow::before {
+    left: 0;
+    transform-origin: 7px 50%;
+    transform: rotate(-40deg);
+}
+
+.filter-arrow::after {
+    right: 0;
+    transform-origin: 1px 50%;
+    transform: rotate(40deg);
+}
+
+.filter-group.is-open .filter-arrow::before {
+    transform: rotate(40deg);
+}
+
+.filter-group.is-open .filter-arrow::after {
+    transform: rotate(-40deg);
 }
 
 .filter-percent-values {
