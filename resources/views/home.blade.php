@@ -280,8 +280,9 @@
                                 {{ $promoProduct->brand->name }}
                             </p>
 
-                            <a href="#" class="products-promo-link">
-                                Показать все {{ $promoProduct->id }}
+
+                            <a href="{{ route('catalog.category', 'novinki') }}" class="products-promo-link">
+                                Показать все
                             </a>
 
                         </article>
@@ -320,7 +321,7 @@
                     <h2>Новости</h2>
 
                     <div class="news-header-actions">
-                        <a href="#">Все новости3</a>
+                        <a href="{{ route('news.index') }}">Все новости</a>
 
                         <button class="news-slider-btn news-slider-btn--prev slider-arrow"></button>
                         <button class="news-slider-btn news-slider-btn--next slider-arrow"></button>
@@ -387,7 +388,7 @@
                             Наиболее популярные
                         </div>
 
-                        <a href="{{ route('catalog.index') }}" class="catalog-popular-link">
+                        <a href="{{ route('catalog.category', 'populyarnye') }}" class="catalog-popular-link">
                             Смотреть все
                         </a>
 
@@ -637,8 +638,8 @@
                                 {{ $promoProduct->brand->name }}
                             </p>
 
-                            <a href="#" class="products-promo-link">
-                                Показать все {{ $promoProduct->id }}
+                            <a href="{{ route('catalog.category', 'akcii') }}" class="products-promo-link">
+                                Показать все
                             </a>
 
                         </article>
@@ -751,7 +752,7 @@
 
         <section class="news-section">
             <div class="container">
-                <h2 class="news-section-title">Новости4</h2>
+                <h2 class="news-section-title">Новости</h2>
 
                 <div class="news-section-list">
 

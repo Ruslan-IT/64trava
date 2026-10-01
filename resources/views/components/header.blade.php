@@ -44,19 +44,10 @@
                         </button>
 
                         <div class="dropdown-content">
-
                             <a href="{{ url('/') }}">Главная</a>
-                            <a href="{{ url('/cart') }}">Корзина</a>
-                            <a href="{{ url('/cart-2') }}">Корзина 2</a>
-                            <a href="{{ url('/cart-3') }}">Корзина 3</a>
                             <a href="{{ url('/delivery') }}">Доставка и оплата</a>
                             <a href="{{ url('/news') }}">Новости</a>
-                            <a href="{{ url('/news-details') }}">Детальная новость</a>
-                            <a href="{{ url('/product') }}">Товар</a>
-                            <a href="{{ url('/product-2') }}">Товар 2</a>
-                            <a href="{{ url('/product-details') }}">Детальная страница товара</a>
-                            <a href="{{ url('/text') }}">Текстовая страница</a>
-
+                           {{-- <a href="{{ url('/text') }}">Текстовая страница</a>--}}
 
                         </div>
 
@@ -74,9 +65,6 @@
                         <div class="dropdown-content">
 
                             <a href="#">Пункт меню 1</a>
-                            <a href="#">Пункт меню 2</a>
-                            <a href="#">Пункт меню 3</a>
-                            <a href="#">Пункт меню 4</a>
 
                         </div>
 
