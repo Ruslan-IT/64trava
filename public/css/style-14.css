@@ -1039,7 +1039,7 @@ input, button {
 
 .tags-section {
     width: 100%;
-    margin: 0 0 100px 0;
+    margin: 0 0 60px 0;
 }
 
 
@@ -1243,7 +1243,7 @@ input, button {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
+    align-items: flex-start;
     gap: 20px;
 }
 
@@ -9296,7 +9296,7 @@ input, button {
     touch-action: pan-y;
     user-select: none;
     -webkit-user-select: none;
-    margin: 0 0 150px 0;
+    margin: 0 0 60px 0;
 }
 
 .main-slider__track {

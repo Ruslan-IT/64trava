@@ -108,6 +108,13 @@
     @endphp
 
     <div>
+        @teleport('#product-detail-prices')
+            @include('products.partials.detail-price', [
+                'priceSource' => $selectedVariant ?? $product,
+                'live' => true,
+            ])
+        @endteleport
+
         <div class="product-order-packs">
 
 

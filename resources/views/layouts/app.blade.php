@@ -252,6 +252,19 @@
 
     });
 
+    document.addEventListener('click', function (event) {
+        const search = document.querySelector('.search');
+        const results = document.querySelector('.search-results');
+
+        if (!search || !results) {
+            return;
+        }
+
+        if (!search.contains(event.target)) {
+            results.style.display = 'none';
+        }
+    });
+
 
 
 </script>

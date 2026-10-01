@@ -24,10 +24,18 @@ class AddToCart extends Component
         $this->product = $product;
         $this->type = $type;
 
-        $variant = $product->variants
-            ->first(fn (ProductVariant $variant) => $variant->stock > 0);
+        $source = static::priceSource($product);
 
-        $this->selectedVariantId = $variant?->id;
+        $this->selectedVariantId = $source instanceof ProductVariant ? $source->id : null;
+    }
+
+    public static function priceSource(Product $product, ?int $selectedVariantId = null): Product|ProductVariant
+    {
+        $variant = $selectedVariantId !== null
+            ? $product->variants->firstWhere('id', $selectedVariantId)
+            : $product->variants->first(fn (ProductVariant $variant) => $variant->stock > 0);
+
+        return $variant ?? $product;
     }
 
     public function selectVariant(int $variantId): void

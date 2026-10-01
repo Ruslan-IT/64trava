@@ -59,65 +59,67 @@
             <!-- Вывод поиска-->
             <!-- Вывод поиска-->
             @if(strlen($search) >= 2)
+                <div class="search">
+                    <div class="search-results">
 
-                <div class="search-results">
+                        @if(count($products))
 
-                    @if(count($products))
+                            @foreach($products as $product)
 
-                        @foreach($products as $product)
+                                <div class="search-result-item">
 
-                            <div class="search-result-item">
+                                    <img
+                                        src="{{ asset('storage/' . $product->image) }}"
+                                        alt="{{ $product->name }}"
+                                        class="search-result-image"
+                                    >
 
-                                <img
-                                    src="{{ asset('storage/' . $product->image) }}"
-                                    alt="{{ $product->name }}"
-                                    class="search-result-image"
-                                >
+                                    <div class="search-result-info">
 
-                                <div class="search-result-info">
+                                        <div class="search-result-title">
+                                            <a href="{{ route('product.show', $product->slug) }}">
+                                                {{ $product->name }}
+                                            </a>
+                                        </div>
 
-                                    <div class="search-result-title">
-                                        <a href="{{ route('product.show', $product->slug) }}">
-                                            {{ $product->name }}
-                                        </a>
+                                        @if(\App\Models\Product::hasPublicValue($product->brand?->name))
+                                            <div class="search-result-brand">
+                                                {{ $product->brand?->name ?? '' }}
+                                            </div>
+                                        @endif
+
                                     </div>
 
-                                    @if(\App\Models\Product::hasPublicValue($product->brand?->name))
-                                    <div class="search-result-brand">
-                                        {{ $product->brand?->name ?? '' }}
+                                    <div class="search-result-price">
+                                        @if($product->price === null)
+                                            Цена не указана
+                                        @else
+                                            {{ $product->price }} ₽
+                                        @endif
                                     </div>
-                                    @endif
 
                                 </div>
 
-                                <div class="search-result-price">
-                                    @if($product->price === null)
-                                        Цена не указана
-                                    @else
-                                        {{ $product->price }} ₽
-                                    @endif
-                                </div>
+                            @endforeach
 
+                            <a
+                                href="{{ route('catalog.index', ['search' => $search]) }}"
+                                class="search-results-all"
+                            >
+                                Посмотреть все результаты
+                            </a>
+
+                        @else
+
+                            <div class="search-results-empty">
+                                Ничего не найдено
                             </div>
 
-                        @endforeach
+                        @endif
 
-                        <a
-                            href="{{ route('catalog.index', ['search' => $search]) }}"
-                            class="search-results-all"
-                        >
-                            Посмотреть все результаты
-                        </a>
-
-                    @else
-
-                        <div class="search-results-empty">
-                            Ничего не найдено
-                        </div>
-
-                    @endif
-
+                    </div>
                 </div>
+
 
             @endif
         </div>

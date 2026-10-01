@@ -117,21 +117,18 @@
 
                     <div class="product-detail-price-row">
 
-                        <div class="product-detail-prices">
-                        @if(\App\Models\Product::hasPublicValue($product->old_price))
-                        <span class="product-detail-old-price">
-                            {{ $product->old_price ? $product->old_price . 'p'  : ''}}
-                        </span>
+                        @if($product->variants->isNotEmpty())
+                            <div id="product-detail-prices" style="display: contents">
+                                @include('products.partials.detail-price', [
+                                    'priceSource' => \App\Livewire\AddToCart::priceSource($product),
+                                    'fallback' => true,
+                                ])
+                            </div>
+                        @else
+                            @include('products.partials.detail-price', [
+                                'priceSource' => $product,
+                            ])
                         @endif
-
-                            <span class="product-detail-current-price">
-                                @if($product->price === null)
-                                    Цена не указана
-                                @else
-                                    {{ $product->price }} р
-                                @endif
-                            </span>
-                        </div>
 
                         @if(\App\Models\Product::hasPublicValue($product->rating))
                         <div class="product-detail-rating">

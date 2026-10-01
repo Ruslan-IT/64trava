@@ -99,23 +99,23 @@ class ProductForm
                         Section::make('Цена и наличие')
                             ->schema([
 
-                                TextInput::make('price')
+                               /* TextInput::make('price')
                                     ->label('Цена')
                                     ->required()
                                     ->numeric()
-                                    ->prefix('$'),
+                                    ->prefix('$'),*/
 
-                                TextInput::make('old_price')
+                               /* TextInput::make('old_price')
                                     ->label('Старая цена')
                                     ->numeric()
                                     ->prefix('$')
-                                    ->nullable(),
+                                    ->nullable(),*/
 
-                                TextInput::make('stock')
+                               /* TextInput::make('stock')
                                     ->label('Остаток')
                                     ->required()
                                     ->numeric()
-                                    ->default(0),
+                                    ->default(0),*/
 
                                 Toggle::make('is_visible')
                                     ->label('Показывать в каталоге')
