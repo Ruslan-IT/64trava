@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Models\BrandSubcategory;
 use App\Models\Category;
 use App\Models\News;
 use App\Models\Product;
@@ -138,7 +139,7 @@ class CatalogController
 
         $catalogInfo = $brand ?? $currentCategory;
 
-        return view('category.index', compact(
+        return $this->catalogPage(compact(
             'products',
             'categories',
             'brands',
@@ -150,15 +151,21 @@ class CatalogController
     }
 
 
-    public function brand(Brand $brand)
+    public function brand(Brand $brand, ?BrandSubcategory $brandSubcategory = null)
     {
 
         $tag = null;
 
-        $products = Product::query()
+        $productsQuery = Product::query()
             ->visibleInCatalog()
             ->with(['brand', 'categories', 'tags'])
-            ->where('brand_id', $brand->id)
+            ->where('brand_id', $brand->id);
+
+        if ($brandSubcategory) {
+            $brandSubcategory->applyToProductQuery($productsQuery);
+        }
+
+        $products = $productsQuery
             ->latest()
             ->paginate(24)
             ->withQueryString();
@@ -176,15 +183,26 @@ class CatalogController
 
         $catalogInfo = $brand;
 
-        return view('category.index', compact(
+        return $this->catalogPage(compact(
             'products',
             'categories',
             'brands',
             'currentCategory',
             'brand',
             'tag',
-            'catalogInfo'
+            'catalogInfo',
+            'brandSubcategory'
         ));
+    }
+
+    public function brandSubcategory(Brand $brand, string $subcategory)
+    {
+        $brandSubcategory = $brand->subcategories()
+            ->published()
+            ->where('slug', $subcategory)
+            ->firstOrFail();
+
+        return $this->brand($brand, $brandSubcategory);
     }
 
 
@@ -217,7 +235,7 @@ class CatalogController
         $currentCategory = null;
         $brand = null;
 
-        return view('category.index', compact(
+        return $this->catalogPage(compact(
             'products',
             'categories',
             'brands',
@@ -226,6 +244,41 @@ class CatalogController
             'tag',
             'catalogInfo'
         ));
+    }
+
+    private function catalogPage(array $data)
+    {
+        $brand = $data['brand'] ?? null;
+        $brandSubcategory = $data['brandSubcategory'] ?? null;
+        $currentCategory = $data['currentCategory'] ?? null;
+        $tag = $data['tag'] ?? null;
+
+        $data['brandSubcategory'] = $brandSubcategory;
+        $data['seoTitle'] = 'Каталог | Dutch Seeds';
+        $data['seoDescription'] = 'Каталог Dutch Seeds.';
+        $data['seoKeywords'] = 'Каталог, новинки, информация, Dutch Seeds';
+        $data['canonicalUrl'] = url('/news');
+
+        if ($brandSubcategory) {
+            $data['seoTitle'] = ($brandSubcategory->seo_title ?: $brandSubcategory->heading()).' | Dutch Seeds';
+            $data['seoDescription'] = $brandSubcategory->seo_description;
+            $data['seoKeywords'] = $brandSubcategory->seo_keywords;
+            $data['canonicalUrl'] = route('catalog.brand.subcategory', [
+                'brand' => $brand,
+                'subcategory' => $brandSubcategory->slug,
+            ]);
+        } elseif ($currentCategory) {
+            $data['canonicalUrl'] = route('catalog.category', $currentCategory->slug);
+        } elseif ($brand) {
+            $data['seoTitle'] = ($brand->seo_title ?: $brand->name).' | Dutch Seeds';
+            $data['seoDescription'] = $brand->seo_description ?: $data['seoDescription'];
+            $data['seoKeywords'] = $brand->seo_keywords ?: $data['seoKeywords'];
+            $data['canonicalUrl'] = route('catalog.brand', $brand);
+        } elseif (! $tag) {
+            $data['canonicalUrl'] = route('catalog.index');
+        }
+
+        return view('category.index', $data);
     }
 
     public function count()

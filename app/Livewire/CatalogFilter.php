@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\BrandSubcategory;
 use App\Models\Category;
 use App\Models\Product;
 use Livewire\Attributes\Url;
@@ -79,6 +80,7 @@ class CatalogFilter extends Component
     public $brand = null;
     public $tag = null;
     public $catalogInfo = null;
+    public $brandSubcategory = null;
 
     public function updated($property): void
     {
@@ -194,6 +196,10 @@ class CatalogFilter extends Component
 
         if ($this->brand) {
             $query->where('brand_id', $this->brand->id);
+        }
+
+        if ($this->brandSubcategory instanceof BrandSubcategory) {
+            $this->brandSubcategory->applyToProductQuery($query);
         }
 
         if ($this->tag) {
@@ -397,6 +403,9 @@ class CatalogFilter extends Component
         }
 
         $categories = $this->categoryButtons();
+        $brandSubcategories = $this->brand
+            ? $this->brand->subcategories()->published()->get()
+            : collect();
 
         return view('livewire.catalog-filter', [
             'products' => $products,
@@ -412,6 +421,8 @@ class CatalogFilter extends Component
             'brand' => $this->brand,
             'tag' => $this->tag,
             'categories' => $categories,
+            'brandSubcategories' => $brandSubcategories,
+            'brandSubcategory' => $this->brandSubcategory,
             'catalogInfo' => $this->catalogInfo,
         ]);
     }
@@ -441,12 +452,13 @@ class CatalogFilter extends Component
             ->values();
     }
 
-    public function mount($currentCategory = null, $brand = null, $tag = null, $catalogInfo = null): void
+    public function mount($currentCategory = null, $brand = null, $tag = null, $catalogInfo = null, $brandSubcategory = null): void
     {
         $this->currentCategory = $currentCategory;
         $this->brand = $brand;
         $this->tag = $tag;
         $this->catalogInfo = $catalogInfo;
+        $this->brandSubcategory = $brandSubcategory;
     }
 
     protected function rangeIsActive(?int $min, ?int $max, int $defaultMin, int $defaultMax): bool

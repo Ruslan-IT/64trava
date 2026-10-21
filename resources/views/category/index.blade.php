@@ -1,12 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Каталог | Dutch Seeds')
+@section('title', $seoTitle ?? 'Каталог | Dutch Seeds')
 
 @section('seo')
 
-    <meta name="description" content="Каталог Dutch Seeds.">
-    <meta name="keywords" content="Каталог, новинки, информация, Dutch Seeds">
-    <link rel="canonical" href="{{ url('/news') }}">
+    @if(filled($seoDescription ?? null))
+        <meta name="description" content="{{ $seoDescription }}">
+    @endif
+    @if(filled($seoKeywords ?? null))
+        <meta name="keywords" content="{{ $seoKeywords }}">
+    @endif
+    <link rel="canonical" href="{{ $canonicalUrl ?? url('/news') }}">
+    @if(! empty($brand) || ! empty($brandSubcategory))
+        <meta name="robots" content="index, follow">
+    @endif
 
 @endsection
 
@@ -59,6 +66,7 @@
                 'brand' => $brand,
                 'tag' => $tag,
                 'catalogInfo' => $catalogInfo,
+                'brandSubcategory' => $brandSubcategory ?? null,
             ])
 
 

@@ -37,6 +37,8 @@ Route::get('/cat/{category}', [CatalogController::class, 'index'])->name('catalo
 
 Route::get('/brands/{brand}', [CatalogController::class, 'brand'])->name('catalog.brand');
 
+Route::get('/brands/{brand}/{subcategory}', [CatalogController::class, 'brandSubcategory'])->name('catalog.brand.subcategory');
+
 
 Route::get('/cat/tag/{tag}', [CatalogController::class, 'tag'])->name('catalog.tag');
 

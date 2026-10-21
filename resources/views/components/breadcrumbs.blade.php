@@ -20,6 +20,20 @@
             <span>-</span>
             <span class="breadcrumbs-current">Сидбанки</span>
 
+        @elseif(request()->routeIs('catalog.brand'))
+            <span>-</span>
+            <a href="{{ route('catalog.index') }}">Каталог</a>
+            <span>-</span>
+            <span class="breadcrumbs-current">{{ $brand->name }}</span>
+
+        @elseif(request()->routeIs('catalog.brand.subcategory'))
+            <span>-</span>
+            <a href="{{ route('catalog.index') }}">Каталог</a>
+            <span>-</span>
+            <a href="{{ route('catalog.brand', $brand) }}">{{ $brand->name }}</a>
+            <span>-</span>
+            <span class="breadcrumbs-current">{{ $brandSubcategory->heading() }}</span>
+
         @elseif(request()->routeIs('catalog.category'))
             <span>-</span>
             <a href="{{ route('catalog.index') }}">Каталог</a>

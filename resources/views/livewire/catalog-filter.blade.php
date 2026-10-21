@@ -810,13 +810,19 @@
                     <div class="catalog-welcome-content">
 
                         <div class="catalog-welcome-title">
-                            <span>{{ $catalogInfo->name }}</span>
+                            <h1 style="margin:0;padding:0;font:inherit;line-height:inherit;">{{ $brandSubcategory ? $brandSubcategory->heading() : $catalogInfo->name }}</h1>
                             <span class="catalog-welcome-slash"></span>
                             <span class="catalog-welcome-country"></span>
                         </div>
 
                         <div class="catalog-welcome-text">
-                            {!! $catalogInfo->description !!}
+                            @if($brandSubcategory)
+                                @if(filled($brandSubcategory->seo_text))
+                                    {!! $brandSubcategory->seo_text !!}
+                                @endif
+                            @else
+                                {!! $catalogInfo->description !!}
+                            @endif
                         </div>
 
                         <a href="#" class="catalog-welcome-more">
@@ -828,8 +834,22 @@
                 </div>
 
             @endif
+            @if(! $brand || $brandSubcategories->isNotEmpty())
             <div class="catalog-category-buttons">
 
+                @if($brand)
+                    <a href="{{ route('catalog.brand', $brand) }}"
+                       class="category-button{{ $brandSubcategory ? '' : ' active' }}">
+                        Все товары
+                    </a>
+
+                    @foreach($brandSubcategories as $subcategory)
+                        <a href="{{ route('catalog.brand.subcategory', ['brand' => $brand, 'subcategory' => $subcategory->slug]) }}"
+                           class="category-button{{ $brandSubcategory && $brandSubcategory->id === $subcategory->id ? ' active' : '' }}">
+                            {{ $subcategory->name }}
+                        </a>
+                    @endforeach
+                @else
                 <a href="{{ route('catalog.index') }}"
                    class="category-button{{ ! $currentCategory && ! $brand && ! $tag ? ' active' : '' }}">
                     Все товары
@@ -841,6 +861,7 @@
                         {{ $category->name }}
                     </a>
                 @endforeach
+                @endif
 
 
                 <button type="button" class="catalog-category-more">
@@ -852,6 +873,7 @@
                 </button>
 
             </div>
+            @endif
 
 
             <div class="catalog-controls">
