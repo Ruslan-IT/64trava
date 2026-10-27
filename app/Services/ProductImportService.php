@@ -22,10 +22,14 @@ class ProductImportService
     public function import(array $row): Product
     {
         return DB::transaction(function () use ($row) {
+            if (! filled($row['seed_type'] ?? null)) {
+                $row['seed_type'] = null;
+            }
+
             Validator::make($row, [
                 'strain' => ['required', 'string'],
                 'brand' => ['required', 'string'],
-                'seed_type' => ['required', Rule::in(array_keys(self::TYPE_LABELS))],
+                'seed_type' => ['nullable', Rule::in(array_keys(self::TYPE_LABELS))],
                 'price' => ['nullable', 'numeric'],
                 'variants' => ['array'],
                 'variants.*.package_size' => ['required', 'integer', 'min:1'],
@@ -42,7 +46,7 @@ class ProductImportService
                 ['name' => $brandName]
             );
 
-            $name = $this->productName($row['strain'], $row['seed_type'], $brand->name);
+            $name = $this->productName($row['strain'], $row['seed_type'] ?? null, $brand->name);
             $slug = Str::slug($name);
 
             $product = Product::query()->where('slug', $slug)->first() ?? new Product();
@@ -77,12 +81,12 @@ class ProductImportService
         });
     }
 
-    private function productName(string $strain, string $seedType, string $brand): string
+    private function productName(string $strain, ?string $seedType, string $brand): string
     {
         $name = trim($strain);
-        $label = self::TYPE_LABELS[$seedType];
+        $label = self::TYPE_LABELS[$seedType] ?? null;
 
-        if (! str_contains($name, $label)) {
+        if ($label !== null && ! str_contains($name, $label)) {
             $name .= ' '.$label;
         }
 

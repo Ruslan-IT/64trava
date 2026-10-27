@@ -208,18 +208,334 @@ class ExcelProductImportServiceTest extends TestCase
         $this->assertSame(3, ProductVariant::query()->first()->package_size);
     }
 
-    public function test_empty_type_is_reported_and_does_not_create_a_product(): void
+    public function test_empty_type_is_imported_with_null_seed_type(): void
     {
         $row = $this->sampleRow();
-        $row[array_search('Type', $this->headers(), true)] = '';
+        $row[array_search('Type', $this->headers(), true)] = '   ';
 
         $result = $this->importSheet([$this->headers(), $row]);
+        $product = Product::query()->first();
+
+        $this->assertSame(1, $result['imported']);
+        $this->assertSame([], $result['errors']);
+        $this->assertNull($product->seed_type);
+        $this->assertSame("Acapulco Gold Barney's Farm", $product->name);
+        $this->assertStringNotContainsString('Feminised', $product->name);
+        $this->assertSame('Mexican x Colombian', $product->genetics);
+        $this->assertSame(2, $product->variants()->count());
+    }
+
+    public function test_brand_and_name_are_enough_to_import_a_product(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => '  Only Name  ',
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $this->assertSame(1, $result['imported']);
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('Only Name Doctor Choice', $product->name);
+        $this->assertSame('Doctor Choice', $product->brand->name);
+        $this->assertNull($product->seed_type);
+        $this->assertNull($product->price);
+        $this->assertNull($product->thc);
+        $this->assertNull($product->cbd);
+        $this->assertNull($product->genetics);
+        $this->assertNull($product->description);
+        $this->assertNull($product->image);
+        $this->assertSame(0, $product->variants()->count());
+        $this->assertFalse($product->isListedInCatalog());
+        $this->assertTrue(collect($result['warnings'])->contains(
+            fn ($warning) => $warning['message'] === 'Не указана цена — варианты товара не созданы'
+        ));
+    }
+
+    public function test_genetics_and_type_are_kept_when_other_cells_are_empty(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'Partial Strain',
+            'Genetics' => 'Skunk x Haze',
+            'Type' => 'Autoflower',
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('Partial Strain Autoflower Doctor Choice', $product->name);
+        $this->assertSame('A', $product->seed_type);
+        $this->assertSame('Skunk x Haze', $product->genetics);
+        $this->assertNull($product->thc);
+        $this->assertNull($product->sativa_percent);
+        $this->assertNull($product->indica_percent);
+        $this->assertNull($product->taste);
+        $this->assertNull($product->effect);
+        $this->assertNull($product->aroma);
+        $this->assertSame(0, $product->variants()->count());
+    }
+
+    public function test_descriptions_and_some_photos_are_imported_without_other_fields(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'Described Strain',
+            'Harvest' => 'October',
+            'TXT1' => 'Short description',
+            'TXT2' => 'Long description',
+            'Foto1' => 'https://cdn.test/one.jpg',
+            'Foto3' => 'https://cdn.test/three.jpg',
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('Short description', $product->description);
+        $this->assertSame('Long description', $product->full_description);
+        $this->assertSame('October', $product->harvest);
+        $this->assertNotNull($product->image);
+        $this->assertCount(1, $product->gallery ?? []);
+        $this->assertTrue(Storage::disk('public')->exists($product->image));
+        $this->assertNull($product->thc);
+        $this->assertSame(0, $product->variants()->count());
+    }
+
+    public function test_missing_numeric_characteristics_stay_null(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'No Numbers',
+            'THC %' => '   ',
+            'CBD %' => '',
+            'Sativa %' => null,
+            'Indica %' => ' ',
+            'Height Indoor (cm)' => '',
+            'Indoor Yield (g/m²)' => '',
+            'Flowering Time (days)' => '',
+            'Height Outdoor (cm)' => '',
+            'Outdoor Yield (g/plant)' => '',
+        ]);
+
+        $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $this->assertNull($product->thc);
+        $this->assertNull($product->cbd);
+        $this->assertNull($product->sativa_percent);
+        $this->assertNull($product->indica_percent);
+        $this->assertNull($product->indoor_height);
+        $this->assertNull($product->yield);
+        $this->assertNull($product->flowering);
+        $this->assertNull($product->height);
+        $this->assertNull($product->outdoor_yield);
+        $this->assertNotSame('0', (string) $product->thc);
+        $this->assertNotSame(0, $product->cbd);
+    }
+
+    public function test_partial_variant_keeps_only_the_complete_pack(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'One Pack',
+            'Genetics' => 'Kept genetics',
+            'Art1' => '   ',
+            'Fas1' => 3,
+            'Price1' => 1500,
+            'Art2' => 'DC-5',
+            'Fas2' => 5,
+            'Price2' => 900,
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+        $variant = $product->variants()->first();
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('Kept genetics', $product->genetics);
+        $this->assertSame(1, $product->variants()->count());
+        $this->assertSame('DC-5', $variant->sku);
+        $this->assertSame(5, $variant->package_size);
+        $this->assertSame('900.00', $variant->price);
+        $this->assertSame('900.00', $product->price);
+        $this->assertTrue(collect($result['warnings'])->contains(
+            fn ($warning) => str_contains($warning['message'], 'вариант 1 не создан')
+        ));
+    }
+
+    public function test_price_without_a_pack_is_kept_and_does_not_create_a_variant(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'Price Only',
+            'Price1' => 1800,
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('1800.00', $product->price);
+        $this->assertSame(0, $product->variants()->count());
+        $this->assertTrue(collect($result['warnings'])->contains(
+            fn ($warning) => str_contains($warning['message'], 'вариант 1 не создан')
+        ));
+    }
+
+    public function test_missing_name_is_reported_and_does_not_create_a_product(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => '   ',
+            'Genetics' => 'Should not be stored',
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
 
         $this->assertSame(0, $result['imported']);
         $this->assertSame(0, Product::query()->count());
         $this->assertSame(2, $result['errors'][0]['row']);
-        $this->assertSame('Type', $result['errors'][0]['field']);
-        $this->assertStringContainsString('не указан Type', $result['errors'][0]['message']);
+        $this->assertSame('Name', $result['errors'][0]['field']);
+        $this->assertSame('Строка 2: не указано название', $result['errors'][0]['message']);
+    }
+
+    public function test_valid_rows_are_imported_when_another_row_is_invalid(): void
+    {
+        [$headers, $valid] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'Good Strain',
+            'Type' => 'Regular',
+        ]);
+        $missingName = $valid;
+        $missingName[array_search('Name', $headers, true)] = '';
+        $missingName[array_search('Genetics', $headers, true)] = 'Lost';
+        $second = $valid;
+        $second[array_search('Name', $headers, true)] = 'Second Strain';
+
+        $result = $this->importRows([$headers, $valid, $missingName, $second]);
+
+        $this->assertSame(2, $result['imported']);
+        $this->assertSame(2, Product::query()->count());
+        $this->assertSame(1, count($result['errors']));
+        $this->assertSame(3, $result['errors'][0]['row']);
+        $this->assertSame('Name', $result['errors'][0]['field']);
+        $this->assertNull(Product::query()->where('genetics', 'Lost')->first());
+    }
+
+    public function test_missing_characteristics_are_not_shown_as_placeholders(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'Visible Strain',
+            'Art1' => 'DC-3',
+            'Fas1' => 3,
+            'Price1' => 1100,
+        ]);
+
+        $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $card = view('components.product-card', ['product' => $product])->render();
+        $page = $this->get(route('product.show', $product->slug));
+
+        $page->assertOk();
+        $page->assertSee('Visible Strain');
+        $page->assertDontSee('product-detail-features', false);
+        $page->assertDontSee('Не указано');
+        $page->assertDontSee('Тип семян');
+        $this->assertStringNotContainsString('Тип семян', $card);
+        $this->assertStringNotContainsString('Не указано', $card);
+    }
+
+    public function test_sparse_product_can_be_imported_again_without_a_duplicate(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => 'Doctor Choice',
+            'Name' => 'Repeat Strain',
+            'Genetics' => 'First genetics',
+        ]);
+        $file = $this->workbook([$headers, $row]);
+
+        $first = app(ExcelProductImportService::class)->import($file, '');
+        $row[array_search('Genetics', $headers, true)] = 'Updated genetics';
+        $secondFile = $this->workbook([$headers, $row]);
+        $second = app(ExcelProductImportService::class)->import($secondFile, '');
+
+        $this->assertSame(1, $first['imported']);
+        $this->assertSame(1, $second['updated']);
+        $this->assertSame(1, Product::query()->count());
+        $this->assertSame('Updated genetics', Product::query()->first()->genetics);
+    }
+
+    public function test_descriptive_seed_types_use_the_existing_codes(): void
+    {
+        $rows = [$this->headers()];
+        $cases = [
+            'Autoflower Feminised' => 'A',
+            'Feminised (Photoperiod)' => 'F',
+            'Regular (Photoperiod)' => 'R',
+            'Autoflower Regular' => 'AR',
+            'Fast Feminised (mutantfarmer)' => 'F',
+        ];
+
+        foreach ($cases as $label => $code) {
+            $row = $this->sampleRow();
+            $row[array_search('Name', $this->headers(), true)] = 'Strain '.$label;
+            $row[array_search('Type', $this->headers(), true)] = $label;
+            $row[array_search('Art1', $this->headers(), true)] = 'SKU-'.substr(md5($label), 0, 8);
+            $row[array_search('Art2', $this->headers(), true)] = '';
+            $row[array_search('Fas2', $this->headers(), true)] = '';
+            $row[array_search('Price2', $this->headers(), true)] = '';
+            $rows[] = $row;
+        }
+
+        $result = $this->importSheet($rows);
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame(5, Product::query()->count());
+        $this->assertEqualsCanonicalizing(
+            ['A', 'AR', 'F', 'F', 'R'],
+            Product::query()->pluck('seed_type')->all()
+        );
+        $this->assertTrue(collect($result['warnings'])->contains(
+            fn ($warning) => str_contains($warning['message'], 'Type «Autoflower Feminised» записан как Autoflower')
+        ));
+    }
+
+    public function test_price_and_pack_count_without_sku_do_not_invent_a_variant(): void
+    {
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => "Barney's Farm",
+            'Name' => 'Devotchka',
+            'Type' => 'Autoflower Feminised',
+            'Fas Q' => 5,
+            'Price1' => 84,
+            'TXT1' => 'Short description',
+        ]);
+
+        $result = $this->importRows([$headers, $row]);
+        $product = Product::query()->first();
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame('Devotchka Autoflower Barney\'s Farm', $product->name);
+        $this->assertSame('A', $product->seed_type);
+        $this->assertSame('84.00', $product->price);
+        $this->assertSame('Short description', $product->description);
+        $this->assertSame(0, $product->variants()->count());
+        $this->assertTrue(collect($result['warnings'])->contains(
+            fn ($warning) => $warning['field'] === 'Fas Q'
+        ));
+        $this->assertTrue(collect($result['warnings'])->contains(
+            fn ($warning) => str_contains($warning['message'], 'вариант 1 не создан')
+        ));
+
+        $this->get(route('product.show', $product->slug))
+            ->assertOk()
+            ->assertSee('Devotchka')
+            ->assertDontSee('product-detail-features', false);
     }
 
     public function test_unknown_type_is_reported(): void
@@ -983,6 +1299,30 @@ class ExcelProductImportServiceTest extends TestCase
     private function importSheet(array $rows): array
     {
         return app(ExcelProductImportService::class)->import($this->workbook($rows), "Barney's Farm");
+    }
+
+    private function importRows(array $rows): array
+    {
+        return app(ExcelProductImportService::class)->import($this->workbook($rows), '');
+    }
+
+    private function sparseRow(array $values): array
+    {
+        $headers = array_merge(['Brand'], $this->headers());
+        $fotoIndex = array_search('Foto2', $headers, true);
+        array_splice($headers, $fotoIndex + 1, 0, array_map(
+            fn (int $index) => 'Foto'.$index,
+            range(3, 21)
+        ));
+        $row = array_fill(0, count($headers), null);
+
+        foreach ($values as $header => $value) {
+            $index = array_search($header, $headers, true);
+            $this->assertNotFalse($index, $header);
+            $row[$index] = $value;
+        }
+
+        return [$headers, $row];
     }
 
     private function workbook(array $rows): string

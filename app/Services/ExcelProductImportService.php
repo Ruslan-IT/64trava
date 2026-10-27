@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Product;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +21,15 @@ class ExcelProductImportService
         'Regular' => 'R',
         'Autoregular' => 'AR',
     ];
+
+    private const TYPE_LABELS = [
+        'F' => 'Feminised',
+        'A' => 'Autoflower',
+        'R' => 'Regular',
+        'AR' => 'Autoregular',
+    ];
+
+    private ?array $storedSeedTypes = null;
 
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
@@ -55,28 +66,45 @@ class ExcelProductImportService
             $name = $this->text($this->cell($cells, $headers, 'Name'));
 
             if ($name === null) {
-                $result['skipped']++;
+                $result['errors'][] = [
+                    'row' => $excelRow,
+                    'field' => 'Name',
+                    'message' => 'Строка '.$excelRow.': не указано название',
+                ];
                 continue;
             }
 
             $type = $this->text($this->cell($cells, $headers, 'Type'));
+            $seedType = null;
 
-            if ($type === null) {
-                $result['errors'][] = [
-                    'row' => $excelRow,
-                    'field' => 'Type',
-                    'message' => 'Строка Excel '.$excelRow.': не указан Type',
-                ];
-                continue;
-            }
+            if ($type !== null) {
+                $seedType = $this->resolveSeedType($type);
 
-            if (! isset(self::TYPE_MAP[$type])) {
-                $result['errors'][] = [
-                    'row' => $excelRow,
-                    'field' => 'Type',
-                    'message' => 'Неизвестный тип семян',
-                ];
-                continue;
+                if ($seedType === null) {
+                    $result['errors'][] = [
+                        'row' => $excelRow,
+                        'field' => 'Type',
+                        'message' => 'Неизвестный тип семян',
+                    ];
+                    continue;
+                }
+
+                if (! $this->seedTypeCanBeStored($seedType)) {
+                    $result['errors'][] = [
+                        'row' => $excelRow,
+                        'field' => 'Type',
+                        'message' => 'Строка '.$excelRow.': тип '.self::TYPE_LABELS[$seedType].' нельзя сохранить в текущем столбце products.seed_type',
+                    ];
+                    continue;
+                }
+
+                if (! isset(self::TYPE_MAP[$type])) {
+                    $result['warnings'][] = [
+                        'row' => $excelRow,
+                        'field' => 'Type',
+                        'message' => 'Строка '.$excelRow.': Type «'.$type.'» записан как '.self::TYPE_LABELS[$seedType],
+                    ];
+                }
             }
 
             $this->warnUnmapped($result, $excelRow, $cells, $headers, 'Fas Q');
@@ -90,12 +118,10 @@ class ExcelProductImportService
                 continue;
             }
 
-            $variants = $this->variants($cells, $headers);
-            $price = $variants[0]['price'] ?? null;
+            $variants = $this->variants($cells, $headers, $excelRow, $result);
+            $price = $variants[0]['price'] ?? $this->listedPrice($cells, $headers);
 
-            if ($variants === [] || $price === null) {
-                $variants = [];
-                $price = null;
+            if ($variants === [] && $price === null) {
                 $result['warnings'][] = [
                     'row' => $excelRow,
                     'field' => 'Price1',
@@ -106,7 +132,7 @@ class ExcelProductImportService
             $payload = [
                 'strain' => $name,
                 'brand' => $brandName,
-                'seed_type' => self::TYPE_MAP[$type],
+                'seed_type' => $seedType,
                 'price' => $price,
                 'thc' => $this->thc($this->cell($cells, $headers, 'THC %')),
                 'cbd' => $this->cbd($this->cell($cells, $headers, 'CBD %')),
@@ -134,6 +160,17 @@ class ExcelProductImportService
 
             try {
                 $product = $this->products->import($payload);
+            } catch (QueryException $exception) {
+                if (! str_contains($exception->getMessage(), 'seed_type')) {
+                    throw $exception;
+                }
+
+                $result['errors'][] = [
+                    'row' => $excelRow,
+                    'field' => 'Type',
+                    'message' => 'Строка '.$excelRow.': тип нельзя сохранить в текущем столбце products.seed_type',
+                ];
+                continue;
             } catch (ValidationException $exception) {
                 $result['errors'][] = [
                     'row' => $excelRow,
@@ -170,6 +207,51 @@ class ExcelProductImportService
         }
 
         return $result;
+    }
+
+    private function resolveSeedType(string $type): ?string
+    {
+        if (isset(self::TYPE_MAP[$type])) {
+            return self::TYPE_MAP[$type];
+        }
+
+        $haystack = mb_strtolower($type);
+        $auto = preg_match('/autoflower|autoregular/u', $haystack) === 1;
+        $regular = preg_match('/(?<!auto)regular/u', $haystack) === 1;
+        $feminised = preg_match('/feminised|feminized/u', $haystack) === 1;
+
+        if ($auto && $regular) {
+            return 'AR';
+        }
+
+        if (str_contains($haystack, 'autoregular')) {
+            return 'AR';
+        }
+
+        if ($auto) {
+            return 'A';
+        }
+
+        if ($regular) {
+            return 'R';
+        }
+
+        if ($feminised) {
+            return 'F';
+        }
+
+        return null;
+    }
+
+    private function seedTypeCanBeStored(string $seedType): bool
+    {
+        if ($this->storedSeedTypes === null) {
+            $column = DB::selectOne("SHOW COLUMNS FROM products WHERE Field = 'seed_type'");
+            preg_match_all("/'([^']+)'/", (string) ($column->Type ?? ''), $matches);
+            $this->storedSeedTypes = $matches[1] !== [] ? $matches[1] : ['A', 'F', 'R'];
+        }
+
+        return in_array($seedType, $this->storedSeedTypes, true);
     }
 
     private function resolveBrand(array $cells, array $headers, string $fallbackBrand): ?string
@@ -282,7 +364,7 @@ class ExcelProductImportService
         return $headers;
     }
 
-    private function variants(array $cells, array $headers): array
+    private function variants(array $cells, array $headers, int $excelRow, array &$result): array
     {
         $variants = [];
 
@@ -290,20 +372,62 @@ class ExcelProductImportService
             $package = $this->cell($cells, $headers, 'Fas'.$index);
             $sku = $this->text($this->cell($cells, $headers, 'Art'.$index));
             $price = $this->cell($cells, $headers, 'Price'.$index);
+            $packageText = $this->text($package);
+            $priceText = $this->text($price);
 
-            if ($this->text($package) === null && $sku === null && $this->text($price) === null) {
+            if ($packageText === null && $sku === null && $priceText === null) {
                 continue;
             }
 
-            $variants[] = [
-                'package_size' => is_numeric($package) ? (int) $package : $package,
-                'sku' => $sku ?? '',
-                'price' => is_numeric($price) ? $price + 0 : $price,
-                'stock' => 0,
+            $packageReady = is_numeric($package) && (int) $package >= 1;
+            $priceReady = is_numeric($price);
+
+            if ($packageReady && $sku !== null && $priceReady) {
+                $variants[] = [
+                    'package_size' => (int) $package,
+                    'sku' => $sku,
+                    'price' => $price + 0,
+                    'stock' => 0,
+                ];
+
+                continue;
+            }
+
+            $missing = [];
+
+            if (! $packageReady) {
+                $missing[] = 'Fas'.$index;
+            }
+
+            if ($sku === null) {
+                $missing[] = 'Art'.$index;
+            }
+
+            if (! $priceReady) {
+                $missing[] = 'Price'.$index;
+            }
+
+            $result['warnings'][] = [
+                'row' => $excelRow,
+                'field' => $missing[0],
+                'message' => 'Строка '.$excelRow.': вариант '.$index.' не создан — не заполнено '.implode(', ', $missing),
             ];
         }
 
         return $variants;
+    }
+
+    private function listedPrice(array $cells, array $headers): int|float|null
+    {
+        foreach ([1, 2] as $index) {
+            $price = $this->cell($cells, $headers, 'Price'.$index);
+
+            if (is_numeric($price)) {
+                return $price + 0;
+            }
+        }
+
+        return null;
     }
 
     /**

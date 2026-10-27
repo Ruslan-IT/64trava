@@ -26,6 +26,7 @@ use Tests\TestCase;
  * вариант уникален внутри товара по package_size; sku уникален в product_variants
  *
  * Название: «{сорт} {Feminised|Autoflower|Regular|Autoregular} {бренд}».
+ * Пустой seed_type допустим: тип в название не добавляется и в базе остаётся NULL.
  * Повторный импорт не дописывает бренд и тип второй раз.
  * Совпадение товара — по slug этого названия.
  */
@@ -468,6 +469,26 @@ class ProductImportServiceTest extends TestCase
         $this->assertSame(0, Product::query()->count());
         $this->assertSame(0, ProductVariant::query()->count());
         $this->assertSame(0, Brand::query()->count());
+    }
+
+    public function test_missing_seed_type_is_stored_as_null_without_a_type_label(): void
+    {
+        $product = $this->import($this->row([
+            'seed_type' => null,
+            'thc' => null,
+            'cbd' => null,
+            'sativa_percent' => null,
+            'indica_percent' => null,
+            'variants' => [],
+            'price' => null,
+        ]));
+
+        $this->assertSame("Acapulco Gold Barney's Farm", $product->name);
+        $this->assertNull($product->seed_type);
+        $this->assertNull($product->thc);
+        $this->assertNull($product->cbd);
+        $this->assertNull($product->price);
+        $this->assertSame(0, $product->variants()->count());
     }
 
     public function test_second_import_updates_changed_fields_without_a_duplicate(): void
