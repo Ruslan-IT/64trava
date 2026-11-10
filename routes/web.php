@@ -31,7 +31,9 @@ Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
 
 
-Route::get('/cat', [CatalogController::class, 'index'])->name('catalog.index');
+Route::get('/vsesemena', [CatalogController::class, 'index'])->name('catalog.index');
+Route::redirect('/cat', '/vsesemena', 301);
+
 
 Route::get('/cat/{category}', [CatalogController::class, 'index'])->name('catalog.category');
 

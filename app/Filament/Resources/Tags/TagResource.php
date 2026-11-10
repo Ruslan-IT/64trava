@@ -24,11 +24,9 @@ class TagResource extends Resource
 
     protected static ?string $modelLabel = 'тег';
 
-    protected static ?string $pluralModelLabel = 'Теги';
+    protected static ?string $pluralModelLabel = 'теги';
 
     protected static ?string $slug = 'tags';
-
-    //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     public static function form(Schema $schema): Schema
     {

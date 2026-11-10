@@ -22,7 +22,7 @@ class TagsTable
                     ->sortable(),
 
                 TextColumn::make('slug')
-                    ->label('Slug')
+                    ->label('Адрес страницы')
                     ->searchable()
                     ->sortable(),
 

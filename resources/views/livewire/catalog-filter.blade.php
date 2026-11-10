@@ -833,44 +833,79 @@
 
                 </div>
 
+            @else
+
+                <div class="catalog-welcome">
+                    <div class="catalog-welcome-content">
+                        <div class="catalog-welcome-title">
+                            <h1 style="margin:0;padding:0;font:inherit;line-height:inherit;">Все семена</h1>
+                            <span class="catalog-welcome-slash"></span>
+                            <span class="catalog-welcome-country"></span>
+                        </div>
+                    </div>
+                </div>
+
             @endif
             @if(! $brand || $brandSubcategories->isNotEmpty())
             <div class="catalog-category-buttons">
 
                 @if($brand)
-                    <a href="{{ route('catalog.brand', $brand) }}"
-                       class="category-button{{ $brandSubcategory ? '' : ' active' }}">
-                        Все товары
-                    </a>
-
-                    @foreach($brandSubcategories as $subcategory)
-                        <a href="{{ route('catalog.brand.subcategory', ['brand' => $brand, 'subcategory' => $subcategory->slug]) }}"
-                           class="category-button{{ $brandSubcategory && $brandSubcategory->id === $subcategory->id ? ' active' : '' }}">
-                            {{ $subcategory->name }}
+                    <div class="catalog-category-buttons-row">
+                        <a href="{{ route('catalog.brand', $brand) }}"
+                           class="category-button{{ $brandSubcategory ? '' : ' active' }}">
+                            Все товары
                         </a>
-                    @endforeach
+
+                        @foreach($brandSubcategories as $subcategory)
+                            <a href="{{ route('catalog.brand.subcategory', ['brand' => $brand, 'subcategory' => $subcategory->slug]) }}"
+                               class="category-button{{ $brandSubcategory && $brandSubcategory->id === $subcategory->id ? ' active' : '' }}">
+                                {{ $subcategory->name }}
+                            </a>
+                        @endforeach
+                    </div>
                 @else
-                <a href="{{ route('catalog.index') }}"
-                   class="category-button{{ ! $currentCategory && ! $brand && ! $tag ? ' active' : '' }}">
-                    Все товары
-                </a>
+                    <div class="catalog-category-buttons-row">
+                        <a href="{{ route('catalog.index') }}"
+                           class="category-button{{ ! $currentCategory && ! $brand && ! $tag ? ' active' : '' }}">
+                            Все семена
+                        </a>
+                        <a href="{{ route('catalog.category', 'autoflower') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'autoflower' ? ' active' : '' }}">
+                            Автоцветущие
+                        </a>
+                        <a href="{{ route('catalog.category', 'feminised') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'feminised' ? ' active' : '' }}">
+                            Феминизированные
+                        </a>
+                        <a href="{{ route('catalog.category', 'regular') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'regular' ? ' active' : '' }}">
+                            Регулярные
+                        </a>
+                        <a href="{{ route('catalog.category', 'miksy-semian') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'miksy-semian' ? ' active' : '' }}">
+                            Миксы семян
+                        </a>
+                    </div>
 
-                @foreach($categories as $category)
-                    <a href="{{ route('catalog.category', $category->slug) }}"
-                       class="category-button{{ $currentCategory && mb_strtolower(trim($currentCategory->name)) === mb_strtolower(trim($category->name)) ? ' active' : '' }}">
-                        {{ $category->name }}
-                    </a>
-                @endforeach
+                    <div class="catalog-category-buttons-row">
+                        <a href="{{ route('catalog.category', 'akcii') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'akcii' ? ' active' : '' }}">
+                            Семена по акции
+                        </a>
+                        <a href="{{ route('catalog.category', 'krupnye-packi') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'krupnye-packi' ? ' active' : '' }}">
+                            Крупные пачки
+                        </a>
+                        <a href="{{ route('catalog.category', 'naibolee-populiarnye') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'naibolee-populiarnye' ? ' active' : '' }}">
+                            Наиболее популярные
+                        </a>
+                        <a href="{{ route('catalog.category', 'novinki') }}"
+                           class="category-button{{ $currentCategory && $currentCategory->slug === 'novinki' ? ' active' : '' }}">
+                            Новинки
+                        </a>
+                    </div>
                 @endif
-
-
-                <button type="button" class="catalog-category-more">
-                    <span>Показать ещё</span>
-
-                    <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
-                        <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
-                </button>
 
             </div>
             @endif
@@ -910,27 +945,26 @@
                         Фильтр
                     </button>
 
-                    <div class="catalog-view-buttons-2">
-                        <button type="button" class="catalog-view-button active">
+                    {{--<div class="catalog-view-buttons-2">
+                        <button type="button" class="catalog-view-button" data-catalog-view="2" aria-label="Два товара в строке">
                             <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     d="M15 3C15.8284 3 16.5 3.67157 16.5 4.5V15C16.5 15.8284 15.8284 16.5 15 16.5H4.5C3.67157 16.5 3 15.8284 3 15V4.5C3 3.67157 3.67157 3 4.5 3H15ZM6 13.5H13.5V6H6V13.5Z"
-                                    fill="#277423"/>
+                                    fill="#585858"/>
                                 <path
                                     d="M31.5 3C32.3284 3 33 3.67157 33 4.5V15C33 15.8284 32.3284 16.5 31.5 16.5H21C20.1716 16.5 19.5 15.8284 19.5 15V4.5C19.5 3.67157 20.1716 3 21 3H31.5ZM22.5 13.5H30V6H22.5V13.5Z"
-                                    fill="#277423"/>
+                                    fill="#585858"/>
                                 <path
                                     d="M31.5 19.5C32.3284 19.5 33 20.1716 33 21V31.5C33 32.3284 32.3284 33 31.5 33H21C20.1716 33 19.5 32.3284 19.5 31.5V21C19.5 20.1716 20.1716 19.5 21 19.5H31.5ZM22.5 30H30V22.5H22.5V30Z"
-                                    fill="#277423"/>
+                                    fill="#585858"/>
                                 <path
                                     d="M15 19.5C15.8284 19.5 16.5 20.1716 16.5 21V31.5C16.5 32.3284 15.8284 33 15 33H4.5C3.67157 33 3 32.3284 3 31.5V21C3 20.1716 3.67157 19.5 4.5 19.5H15ZM6 30H13.5V22.5H6V30Z"
-                                    fill="#277423"/>
+                                    fill="#585858"/>
                             </svg>
                         </button>
 
-                        <button type="button" class="catalog-view-button">
-
+                        <button type="button" class="catalog-view-button" data-catalog-view="1" aria-label="Один товар в строке">
                             <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -941,7 +975,7 @@
                                     fill="#585858"/>
                             </svg>
                         </button>
-                    </div>
+                    </div>--}}
 
 
                 </div>
@@ -1039,6 +1073,33 @@
                 .forEach((value) => value.classList.remove('active'));
         });
 
+        const CATALOG_VIEW_KEY = 'catalog-product-view';
+
+        const applyCatalogProductView = (mode) => {
+            const grid = document.querySelector('.products-grid-catalog');
+            const buttons = document.querySelectorAll('.catalog-view-buttons-2 .catalog-view-button');
+
+            if (!grid || buttons.length < 2) {
+                return;
+            }
+
+            grid.classList.remove('catalog-view-2', 'catalog-view-1');
+            buttons.forEach((button) => button.classList.remove('active'));
+
+            if (mode === '2') {
+                grid.classList.add('catalog-view-2');
+                buttons[0].classList.add('active');
+            } else if (mode === '1') {
+                grid.classList.add('catalog-view-1');
+                buttons[1].classList.add('active');
+            }
+        };
+
+        const restoreCatalogProductView = () => {
+            const saved = localStorage.getItem(CATALOG_VIEW_KEY);
+            applyCatalogProductView(saved === '1' || saved === '2' ? saved : '3');
+        };
+
         const preserveFilterDom = () => {
             const hook = () => {
                 Livewire.hook('morph.updating', ({ el, toEl, component }) => {
@@ -1051,6 +1112,18 @@
                     }
 
                     if (el.classList.contains('filter-percent-value') && el.classList.contains('active')) {
+                        toEl.classList.add('active');
+                    }
+
+                    if (el.classList.contains('products-grid-catalog')) {
+                        ['catalog-view-2', 'catalog-view-1'].forEach((className) => {
+                            if (el.classList.contains(className)) {
+                                toEl.classList.add(className);
+                            }
+                        });
+                    }
+
+                    if (el.classList.contains('catalog-view-button') && el.classList.contains('active')) {
                         toEl.classList.add('active');
                     }
                 });
@@ -1095,10 +1168,29 @@
             }
         });
 
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest('.catalog-view-buttons-2 .catalog-view-button');
+
+            if (!button) {
+                return;
+            }
+
+            const mode = button.dataset.catalogView === '1' || button.dataset.catalogView === '2'
+                ? button.dataset.catalogView
+                : '3';
+            const nextMode = button.classList.contains('active') ? '3' : mode;
+
+            localStorage.setItem(CATALOG_VIEW_KEY, nextMode);
+            applyCatalogProductView(nextMode);
+        });
+
         const restoreAfterLivewire = () => {
             Livewire.hook('commit', ({ succeed }) => {
                 succeed(() => {
-                    setTimeout(applyOpenFilters);
+                    setTimeout(() => {
+                        applyOpenFilters();
+                        restoreCatalogProductView();
+                    });
                 });
             });
         };
@@ -1110,6 +1202,7 @@
         }
 
         applyOpenFilters();
+        restoreCatalogProductView();
     }
 </script>
 @endscript

@@ -49,7 +49,7 @@ class ProductsTable
 
                 TextColumn::make('price')
                     ->label('Цена')
-                    ->money('USD')
+                    ->money('RUB')
                     ->sortable(),
 
                 TextColumn::make('stock')

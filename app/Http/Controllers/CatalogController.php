@@ -275,6 +275,7 @@ class CatalogController
             $data['seoKeywords'] = $brand->seo_keywords ?: $data['seoKeywords'];
             $data['canonicalUrl'] = route('catalog.brand', $brand);
         } elseif (! $tag) {
+            $data['seoTitle'] = 'Все семена | Dutch Seeds';
             $data['canonicalUrl'] = route('catalog.index');
         }
 

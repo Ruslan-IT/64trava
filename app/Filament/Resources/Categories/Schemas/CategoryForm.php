@@ -38,7 +38,7 @@ class CategoryForm
                             ),
 
                         TextInput::make('slug')
-                            ->label('URL / Slug')
+                            ->label('Адрес страницы')
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true),

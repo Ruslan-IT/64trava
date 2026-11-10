@@ -44,7 +44,7 @@ class NewsForm
                             ->columnSpanFull(),
 
                         TextInput::make('slug')
-                            ->label('URL')
+                            ->label('Адрес страницы')
                             ->required()
                             ->maxLength(255)
                             ->helperText(
@@ -151,21 +151,21 @@ class NewsForm
                     ->schema([
 
                         TextInput::make('seo_title')
-                            ->label('SEO Title')
+                            ->label('SEO-заголовок')
                             ->maxLength(255)
                             ->helperText(
                                 'Заголовок страницы для поисковых систем.'
                             ),
 
                         TextInput::make('seo_keywords')
-                            ->label('SEO Keywords')
+                            ->label('SEO ключевые слова')
                             ->maxLength(500)
                             ->helperText(
                                 'Ключевые слова через запятую.'
                             ),
 
                         Textarea::make('seo_description')
-                            ->label('SEO Description')
+                            ->label('SEO-описание')
                             ->rows(3)
                             ->maxLength(500)
                             ->columnSpanFull(),

@@ -14,7 +14,7 @@
 
         @elseif(request()->routeIs('catalog.index'))
             <span>-</span>
-            <span class="breadcrumbs-current">Каталог</span>
+            <span class="breadcrumbs-current">Все семена</span>
 
         @elseif(request()->routeIs('seedbanks.index'))
             <span>-</span>
@@ -22,13 +22,13 @@
 
         @elseif(request()->routeIs('catalog.brand'))
             <span>-</span>
-            <a href="{{ route('catalog.index') }}">Каталог</a>
+            <a href="{{ route('catalog.index') }}">Все семена</a>
             <span>-</span>
             <span class="breadcrumbs-current">{{ $brand->name }}</span>
 
         @elseif(request()->routeIs('catalog.brand.subcategory'))
             <span>-</span>
-            <a href="{{ route('catalog.index') }}">Каталог</a>
+            <a href="{{ route('catalog.index') }}">Все семена</a>
             <span>-</span>
             <a href="{{ route('catalog.brand', $brand) }}">{{ $brand->name }}</a>
             <span>-</span>
@@ -36,7 +36,7 @@
 
         @elseif(request()->routeIs('catalog.category'))
             <span>-</span>
-            <a href="{{ route('catalog.index') }}">Каталог</a>
+            <a href="{{ route('catalog.index') }}">Все семена</a>
             <span>-</span>
 
             @if($currentCategory)
@@ -46,7 +46,7 @@
             @elseif(request()->filter === 'popular')
                 <span class="breadcrumbs-current">Популярные</span>
             @else
-                <span class="breadcrumbs-current">Каталог</span>
+                <span class="breadcrumbs-current">Все семена</span>
             @endif
         @endif
     </nav>

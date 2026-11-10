@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Services\OrderExcelService;
+use BackedEnum;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
 class Orders extends Page
 {
@@ -12,6 +14,8 @@ class Orders extends Page
     protected static ?string $title = 'Заказы';
 
     protected static ?string $navigationLabel = 'Заказы';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
     protected static ?string $slug = 'orders';
 

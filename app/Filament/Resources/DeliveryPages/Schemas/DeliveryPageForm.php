@@ -152,15 +152,15 @@ class DeliveryPageForm
                 Section::make('SEO')
                     ->schema([
                         TextInput::make('seo_title')
-                            ->label('SEO Title')
+                            ->label('SEO-заголовок')
                             ->maxLength(255),
 
                         Textarea::make('seo_description')
-                            ->label('SEO Description')
+                            ->label('SEO-описание')
                             ->rows(3),
 
                         Textarea::make('seo_keywords')
-                            ->label('SEO Keywords')
+                            ->label('SEO ключевые слова')
                             ->rows(3),
                     ])
                     ->columns(1),

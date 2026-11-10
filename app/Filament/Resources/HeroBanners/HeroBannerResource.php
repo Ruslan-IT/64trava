@@ -18,7 +18,15 @@ class HeroBannerResource extends Resource
 {
     protected static ?string $model = HeroBanner::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static bool $hasTitleCaseModelLabel = false;
+
+    protected static ?string $modelLabel = 'баннер';
+
+    protected static ?string $pluralModelLabel = 'Баннеры на главной';
+
+    protected static ?string $navigationLabel = 'Баннеры на главной';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
     public static function form(Schema $schema): Schema
     {

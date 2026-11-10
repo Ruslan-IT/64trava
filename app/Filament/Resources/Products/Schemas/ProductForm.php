@@ -58,7 +58,7 @@ class ProductForm
                                     ),
 
                                 TextInput::make('slug')
-                                    ->label('URL / Slug')
+                                    ->label('Адрес страницы')
                                     ->required()
                                     ->maxLength(255)
                                     ->unique(ignoreRecord: true),
@@ -103,12 +103,12 @@ class ProductForm
                                     ->label('Цена')
                                     ->required()
                                     ->numeric()
-                                    ->prefix('$'),*/
+                                    ->prefix('₽'),*/
 
                                /* TextInput::make('old_price')
                                     ->label('Старая цена')
                                     ->numeric()
-                                    ->prefix('$')
+                                    ->prefix('₽')
                                     ->nullable(),*/
 
                                /* TextInput::make('stock')
@@ -163,13 +163,13 @@ class ProductForm
                                             ->label('Цена')
                                             ->numeric()
                                             ->required()
-                                            ->prefix('$'),
+                                            ->prefix('₽'),
 
                                         TextInput::make('old_price')
                                             ->label('Старая цена')
                                             ->numeric()
                                             ->nullable()
-                                            ->prefix('$'),
+                                            ->prefix('₽'),
 
                                         TextInput::make('stock')
                                             ->label('Остаток')
@@ -229,7 +229,7 @@ class ProductForm
                                     ->required(),
 
                                 TextInput::make('sativa_percent')
-                                    ->label('Sativa %')
+                                    ->label('Сатива %')
                                     ->numeric()
                                     ->minValue(0)
                                     ->maxValue(100)
@@ -237,7 +237,7 @@ class ProductForm
                                     ->nullable(),
 
                                 TextInput::make('indica_percent')
-                                    ->label('Indica %')
+                                    ->label('Индика %')
                                     ->numeric()
                                     ->minValue(0)
                                     ->maxValue(100)
@@ -265,22 +265,22 @@ class ProductForm
                                     ->nullable(),
 
                                 TextInput::make('indoor_height')
-                                    ->label('Высота Indoor')
+                                    ->label('Высота в помещении')
                                     ->placeholder('100-140 см')
                                     ->nullable(),
 
                                 TextInput::make('yield')
-                                    ->label('Урожайность Indoor')
+                                    ->label('Урожайность в помещении')
                                     ->placeholder('500-700 г/м²')
                                     ->nullable(),
 
                                 TextInput::make('height')
-                                    ->label('Высота Outdoor')
+                                    ->label('Высота на улице')
                                     ->placeholder('150-200 см')
                                     ->nullable(),
 
                                 TextInput::make('outdoor_yield')
-                                    ->label('Урожайность Outdoor')
+                                    ->label('Урожайность на улице')
                                     ->placeholder('1500 г/растение')
                                     ->nullable(),
 

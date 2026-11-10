@@ -1484,6 +1484,39 @@ input, button {
 
 }
 
+.products-grid-catalog.catalog-view-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.products-grid-catalog.catalog-view-1 {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.products-grid-catalog.catalog-view-1 .product-card {
+    display: grid;
+    grid-template-columns: minmax(160px, 280px) minmax(0, 1fr);
+    column-gap: 30px;
+    align-items: center;
+}
+
+.products-grid-catalog.catalog-view-1 .product-image-wrapper {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+}
+
+.products-grid-catalog.catalog-view-1 .product-card > :not(.product-image-wrapper) {
+    grid-column: 2;
+}
+
+.products-grid-catalog.catalog-view-1 .product-image {
+    margin-bottom: 0;
+}
+
+.products-grid-catalog.catalog-view-1 .product-title {
+    margin-top: 0;
+}
+
 /* =========================
    PROMO
 ========================= */
@@ -1614,6 +1647,26 @@ input, button {
         gap: 20px;
     }
 
+    .products-grid-catalog.catalog-view-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .products-grid-catalog.catalog-view-1 .product-card {
+        display: block;
+    }
+
+    .products-grid-catalog.catalog-view-1 .product-card > :not(.product-image-wrapper) {
+        grid-column: auto;
+    }
+
+    .products-grid-catalog.catalog-view-1 .product-image {
+        margin-bottom: 20px;
+    }
+
+    .products-grid-catalog.catalog-view-1 .product-title {
+        margin-top: 20px;
+    }
+
     .catalog-products {
         grid-template-columns: minmax(0, 1fr);
         gap: 20px;
@@ -1627,6 +1680,10 @@ input, button {
     .catalog-products-home {
         grid-template-columns: 1fr;
         gap: 20px;
+    }
+
+    .products-grid-catalog.catalog-view-2 {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -4644,10 +4701,22 @@ input, button {
 
 .catalog-category-buttons {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     gap: 15px;
     margin: 60px 0 60px 0;
+}
+
+.catalog-category-buttons-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 15px;
+}
+
+@media (max-width: 1100px) {
+    .catalog-category-buttons-row {
+        flex-wrap: wrap;
+    }
 }
 
 .catalog-category-button {
@@ -4821,6 +4890,14 @@ input, button {
     border: 1px solid #d9d9d9;
     background: transparent;
     cursor: pointer;
+}
+
+.catalog-view-button path {
+    fill: #585858;
+}
+
+.catalog-view-button.active path {
+    fill: #277423;
 }
 
 .catalog-products-list {

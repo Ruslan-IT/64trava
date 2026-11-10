@@ -49,7 +49,7 @@ class SubcategoriesRelationManager extends RelationManager
                     }),
 
                 TextInput::make('slug')
-                    ->label('Slug')
+                    ->label('Адрес страницы')
                     ->required()
                     ->maxLength(255)
                     ->unique(
@@ -62,15 +62,15 @@ class SubcategoriesRelationManager extends RelationManager
                     ),
 
                 TextInput::make('h1')
-                    ->label('H1')
+                    ->label('Заголовок H1')
                     ->maxLength(255),
 
                 TextInput::make('seo_title')
-                    ->label('SEO Title')
+                    ->label('SEO-заголовок')
                     ->maxLength(255),
 
                 Textarea::make('seo_description')
-                    ->label('SEO Description')
+                    ->label('SEO-описание')
                     ->rows(3)
                     ->columnSpanFull(),
 
@@ -129,7 +129,7 @@ class SubcategoriesRelationManager extends RelationManager
                     ->searchable(),
 
                 TextColumn::make('slug')
-                    ->label('Slug')
+                    ->label('Адрес страницы')
                     ->searchable(),
 
                 TextColumn::make('seed_type')

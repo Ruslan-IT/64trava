@@ -20,16 +20,15 @@ class DeliveryPageResource extends Resource
 
     protected static ?string $model = DeliveryPage::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
+    protected static bool $hasTitleCaseModelLabel = false;
 
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
 
     protected static ?string $navigationLabel = 'Доставка и оплата';
 
-    protected static ?string $modelLabel = 'Доставка и оплата';
+    protected static ?string $modelLabel = 'страница доставки';
 
     protected static ?string $pluralModelLabel = 'Доставка и оплата';
-
-    //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     public static function form(Schema $schema): Schema
     {

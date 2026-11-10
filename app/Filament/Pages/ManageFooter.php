@@ -26,7 +26,7 @@ class ManageFooter extends Page
 
     protected static ?string $slug = 'footer';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBars3BottomLeft;
 
     public ?array $data = [];
 
@@ -84,7 +84,7 @@ class ManageFooter extends Page
                             ->maxLength(255),
 
                         TextInput::make('contact_url')
-                            ->label('URL')
+                            ->label('Ссылка')
                             ->maxLength(2048)
                             ->helperText('Для почты укажите mailto:info@example.ru'),
                     ]),
@@ -113,7 +113,7 @@ class ManageFooter extends Page
                                             ->maxLength(255),
 
                                         TextInput::make('url')
-                                            ->label('URL')
+                                            ->label('Ссылка')
                                             ->required()
                                             ->maxLength(2048),
                                     ])

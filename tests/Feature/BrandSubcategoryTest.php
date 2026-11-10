@@ -242,21 +242,27 @@ class BrandSubcategoryTest extends TestCase
 
         $index = $this->get(route('catalog.index'))
             ->assertOk()
-            ->assertSee('<link rel="canonical" href="'.route('catalog.index').'">', false);
+            ->assertSee('<link rel="canonical" href="'.route('catalog.index').'">', false)
+            ->assertSee('<h1 style="margin:0;padding:0;font:inherit;line-height:inherit;">Все семена</h1>', false);
 
         $indexButtons = $this->catalogButtons($index->getContent());
-        $this->assertStringContainsString('Все товары', $indexButtons);
-        $this->assertStringContainsString($category->name, $indexButtons);
+        $this->assertStringContainsString('Все семена', $indexButtons);
+        $this->assertStringContainsString('Автоцветущие', $indexButtons);
+        $this->assertStringContainsString('Новинки', $indexButtons);
+        $this->assertStringNotContainsString('Показать ещё', $indexButtons);
         $this->assertStringContainsString(route('catalog.index'), $indexButtons);
+        $this->assertStringContainsString(route('catalog.category', 'autoflower'), $indexButtons);
+        $this->assertStringContainsString(route('catalog.category', 'novinki'), $indexButtons);
 
         $categoryPage = $this->get(route('catalog.category', $category->slug))
             ->assertOk()
             ->assertSee('<link rel="canonical" href="'.route('catalog.category', $category->slug).'">', false);
 
         $categoryButtons = $this->catalogButtons($categoryPage->getContent());
-        $this->assertStringContainsString('Все товары', $categoryButtons);
-        $this->assertStringContainsString($category->name, $categoryButtons);
-        $this->assertStringContainsString(route('catalog.category', $category->slug), $categoryButtons);
+        $this->assertStringContainsString('Все семена', $categoryButtons);
+        $this->assertStringContainsString('Автоцветущие', $categoryButtons);
+        $this->assertStringNotContainsString('Показать ещё', $categoryButtons);
+        $this->assertStringContainsString(route('catalog.category', 'feminised'), $categoryButtons);
     }
 
     public function test_unpublished_and_missing_subcategories_are_not_found(): void
@@ -304,7 +310,7 @@ class BrandSubcategoryTest extends TestCase
 
     private function catalogButtons(string $html): string
     {
-        if (! preg_match('/<div class="catalog-category-buttons">(.*?)<\/div>/s', $html, $matches)) {
+        if (! preg_match('/<div class="catalog-category-buttons">(.*?)(?:<div class="catalog-controls"|$)/s', $html, $matches)) {
             return '';
         }
 
