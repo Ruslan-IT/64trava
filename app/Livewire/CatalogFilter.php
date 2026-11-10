@@ -231,16 +231,14 @@ class CatalogFilter extends Component
         |--------------------------------------------------------------------------
         */
 
-        if (! $searching || $this->rangeIsActive($this->thcMin, $this->thcMax, 1, 60)) {
-            if ($this->thcMin !== null || $this->thcMax !== null) {
-                $query->whereRaw(
-                    Product::upperBoundSql('thc') . ' BETWEEN ? AND ?',
-                    [
-                        $this->thcMin ?? 0,
-                        $this->thcMax ?? 100,
-                    ]
-                );
-            }
+        if ($this->rangeIsActive($this->thcMin, $this->thcMax, 1, 60)) {
+            $query->whereRaw(
+                Product::upperBoundSql('thc') . ' BETWEEN ? AND ?',
+                [
+                    $this->thcMin ?? 0,
+                    $this->thcMax ?? 100,
+                ]
+            );
         }
 
         if ($this->hasCbd) {
@@ -253,16 +251,14 @@ class CatalogFilter extends Component
         |--------------------------------------------------------------------------
         */
 
-        if (! $searching || $this->rangeIsActive($this->floweringMin, $this->floweringMax, 50, 90)) {
-            if ($this->floweringMin !== null || $this->floweringMax !== null) {
-                $query->whereRaw(
-                    Product::upperBoundSql('flowering') . ' BETWEEN ? AND ?',
-                    [
-                        $this->floweringMin ?? 0,
-                        $this->floweringMax ?? 999,
-                    ]
-                );
-            }
+        if ($this->rangeIsActive($this->floweringMin, $this->floweringMax, 50, 90)) {
+            $query->whereRaw(
+                Product::upperBoundSql('flowering') . ' BETWEEN ? AND ?',
+                [
+                    $this->floweringMin ?? 0,
+                    $this->floweringMax ?? 999,
+                ]
+            );
         }
 
         /*
@@ -313,16 +309,14 @@ class CatalogFilter extends Component
         |--------------------------------------------------------------------------
         */
 
-        if (! $searching || $this->rangeIsActive($this->heightMin, $this->heightMax, 70, 200)) {
-            if ($this->heightMin !== null || $this->heightMax !== null) {
-                $query->whereRaw(
-                    Product::upperBoundSql('height') . ' BETWEEN ? AND ?',
-                    [
-                        $this->heightMin ?? 0,
-                        $this->heightMax ?? 999,
-                    ]
-                );
-            }
+        if ($this->rangeIsActive($this->heightMin, $this->heightMax, 70, 200)) {
+            $query->whereRaw(
+                Product::upperBoundSql('height') . ' BETWEEN ? AND ?',
+                [
+                    $this->heightMin ?? 0,
+                    $this->heightMax ?? 999,
+                ]
+            );
         }
 
         if ($this->rangeIsActive($this->indoorYieldMin, $this->indoorYieldMax, 100, 1500)) {
