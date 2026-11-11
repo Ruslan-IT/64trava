@@ -4,12 +4,10 @@ namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
 use App\Jobs\ImportProductsFromExcelJob;
-use App\Models\Brand;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
@@ -75,13 +73,6 @@ class ListProducts extends ListRecords
                             }
                         };
                     }),
-                Select::make('brand')
-                    ->label('Бренд (необязательно)')
-                    ->placeholder('Выберите бренд')
-                    ->options(fn (): array => Brand::query()->orderBy('name')->pluck('name', 'name')->all())
-                    ->searchable()
-                    ->preload()
-                    ->helperText('Используется только если колонка Brand в Excel пустая.'),
             ])
             ->action(function (array $data, Action $action): void {
                 $uploaded = $data['file'] ?? null;
@@ -102,7 +93,6 @@ class ListProducts extends ListRecords
                     ]);
                 }
 
-                $brand = trim((string) ($data['brand'] ?? ''));
                 $storedPath = $uploaded->storeAs('imports', Str::uuid()->toString().'.xlsx');
 
                 if (! is_string($storedPath) || ! Storage::disk('local')->exists($storedPath)) {
@@ -113,7 +103,7 @@ class ListProducts extends ListRecords
 
                 $uploaded->delete();
 
-                ImportProductsFromExcelJob::dispatch($storedPath, $brand);
+                ImportProductsFromExcelJob::dispatch($storedPath, '');
 
                 $this->flushCachedTableRecords();
 

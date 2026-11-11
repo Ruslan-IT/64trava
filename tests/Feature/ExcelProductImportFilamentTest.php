@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Jobs\ImportProductsFromExcelJob;
-use App\Models\Brand;
 use App\Models\User;
 use App\Services\ExcelProductImportService;
 use Filament\Actions\Action;
@@ -80,10 +79,9 @@ class ExcelProductImportFilamentTest extends TestCase
         });
     }
 
-    public function test_selected_brand_is_passed_as_fallback(): void
+    public function test_import_modal_has_no_brand_field_and_queues_empty_brand(): void
     {
         $this->actingAs(User::factory()->create());
-        Brand::query()->firstOrCreate(['name' => "Barney's Farm"]);
         Queue::fake();
         Storage::fake('local');
 
@@ -93,15 +91,16 @@ class ExcelProductImportFilamentTest extends TestCase
 
         Livewire::test(ListProducts::class)
             ->mountAction('importExcel')
+            ->assertFormFieldExists('file')
+            ->assertFormFieldDoesNotExist('brand')
             ->fillForm([
                 'file' => $this->xlsxUpload(),
             ])
-            ->set('mountedActions.0.data.brand', "Barney's Farm")
             ->callMountedAction()
             ->assertHasNoFormErrors();
 
         Queue::assertPushed(ImportProductsFromExcelJob::class, function (ImportProductsFromExcelJob $job): bool {
-            return $job->brand === "Barney's Farm" && Storage::disk('local')->exists($job->path);
+            return $job->brand === '' && Storage::disk('local')->exists($job->path);
         });
     }
 
