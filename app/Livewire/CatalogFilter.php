@@ -182,6 +182,55 @@ class CatalogFilter extends Component
         ]);
     }
 
+    /**
+     * AJAX-переключение категории внутри текущего CatalogFilter
+     * (без wire:navigate и без полной загрузки HTML-страницы).
+     */
+    public function selectCategory(?string $slug = null, bool $pushState = true): void
+    {
+        if ($this->brand || $this->tag) {
+            return;
+        }
+
+        $slug = is_string($slug) ? trim($slug) : null;
+        $slug = $slug === '' ? null : $slug;
+
+        $seoTitle = 'Все семена | Dutch Seeds';
+        $seoDescription = 'Каталог Dutch Seeds.';
+        $seoKeywords = 'Каталог, новинки, информация, Dutch Seeds';
+        $url = route('catalog.index');
+
+        if ($slug === null) {
+            $this->currentCategory = null;
+            $this->catalogInfo = null;
+        } else {
+            $category = Category::query()->where('slug', $slug)->firstOrFail();
+            $this->currentCategory = $category;
+            $this->catalogInfo = $category;
+            $url = route('catalog.category', $category->slug);
+            $seoTitle = ($category->seo_title ?: $category->name).' | Dutch Seeds';
+            $seoDescription = $category->seo_description ?: $seoDescription;
+            $seoKeywords = $category->seo_keywords ?: $seoKeywords;
+        }
+
+        $this->brandSubcategory = null;
+        $this->resetFilters();
+
+        $this->js(
+            'window.__catalogApplyCategory && window.__catalogApplyCategory('
+            .json_encode([
+                'url' => $url,
+                'slug' => $slug,
+                'title' => $seoTitle,
+                'description' => $seoDescription,
+                'keywords' => $seoKeywords,
+                'canonical' => $url,
+                'pushState' => $pushState,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            .')'
+        );
+    }
+
     public function render()
     {
         $query = Product::query()

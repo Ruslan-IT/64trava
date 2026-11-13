@@ -95,8 +95,10 @@ class CatalogController
             $query->where('brand_id', $brand->id);
         }
 
-        /* |--------------------------------------------------------------------------
-        | ТЕГ |--------------------------------------------------------------------------
+        /*
+        |--------------------------------------------------------------------------
+        | ТЕГ
+        |--------------------------------------------------------------------------
         */
         $tag = null;
         if ($request->filled('tag')) {
@@ -268,6 +270,9 @@ class CatalogController
                 'subcategory' => $brandSubcategory->slug,
             ]);
         } elseif ($currentCategory) {
+            $data['seoTitle'] = ($currentCategory->seo_title ?: $currentCategory->name).' | Dutch Seeds';
+            $data['seoDescription'] = $currentCategory->seo_description ?: $data['seoDescription'];
+            $data['seoKeywords'] = $currentCategory->seo_keywords ?: $data['seoKeywords'];
             $data['canonicalUrl'] = route('catalog.category', $currentCategory->slug);
         } elseif ($brand) {
             $data['seoTitle'] = ($brand->seo_title ?: $brand->name).' | Dutch Seeds';

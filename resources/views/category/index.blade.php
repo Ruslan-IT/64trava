@@ -79,23 +79,15 @@
     </main>
 
     <script>
-        const settingsButton = document.querySelector('.settings');
-        const filter = document.querySelector('.catalog-filter');
-        const filterClose = document.querySelector('.catalog-filter-close');
-
-        settingsButton?.addEventListener('click', () => {
-            filter?.classList.toggle('active');
-        });
-
-        filterClose?.addEventListener('click', () => {
-            filter?.classList.remove('active');
-        });
-
         document.addEventListener('click', (event) => {
             const currentFilter = document.querySelector('.catalog-filter');
 
             if (!currentFilter) {
                 return;
+            }
+
+            if (event.target.closest('.settings')) {
+                currentFilter.classList.toggle('active');
             }
 
             if (event.target.closest('.catalog-filter-open')) {
@@ -111,10 +103,13 @@
 
     {{-- вариант фасовки --}}
     <script>
-
-        document.addEventListener('DOMContentLoaded', function () {
-
+        function initCatalogProductCards() {
             document.querySelectorAll('.product-card').forEach(card => {
+                if (card.dataset.variantsBound === '1') {
+                    return;
+                }
+
+                card.dataset.variantsBound = '1';
 
                 const variants = card.querySelectorAll('.pagination-button');
                 const outOfStock = card.querySelector('.variant-out-of-stock');
@@ -130,9 +125,7 @@
                 let quantity = 1;
 
                 variants.forEach(variant => {
-
                     variant.addEventListener('click', function (e) {
-
                         e.preventDefault();
 
                         if (this.classList.contains('disabled')) {
@@ -145,64 +138,44 @@
                         const variantOldPrice = parseFloat(this.dataset.oldPrice);
                         const stock = parseInt(this.dataset.stock);
 
-                        // Цена
                         if (price) {
                             price.textContent = variantPrice + ' р';
                         }
 
-                        // Старая цена
                         if (oldPrice) {
-
                             if (variantOldPrice && variantOldPrice > variantPrice) {
                                 oldPrice.textContent = '$ ' + variantOldPrice;
                                 oldPrice.style.display = '';
                             } else {
                                 oldPrice.style.display = 'none';
                             }
-
                         }
 
-                        // Активная фасовка
                         variants.forEach(item => {
                             item.classList.remove('active');
                         });
 
                         this.classList.add('active');
 
-                        // Если товара нет
                         if (stock <= 0) {
-
                             outOfStock.style.display = 'block';
-
                             quantity = 0;
-
                             quantityValue.textContent = '0';
-
                             minusButton.disabled = true;
                             plusButton.disabled = true;
 
                             return;
                         }
 
-                        // Товар есть
                         outOfStock.style.display = 'none';
-
                         quantity = 1;
-
                         quantityValue.textContent = quantity;
-
                         minusButton.disabled = false;
-
-                        // + нельзя нажать больше остатка
                         plusButton.disabled = quantity >= stock;
-
                     });
                 });
 
-
-                // МИНУС
-                minusButton.addEventListener('click', function () {
-
+                minusButton?.addEventListener('click', function () {
                     if (!selectedVariant) {
                         return;
                     }
@@ -214,14 +187,10 @@
                     }
 
                     quantityValue.textContent = quantity;
-
                     plusButton.disabled = quantity >= stock;
                 });
 
-
-                // ПЛЮС
-                plusButton.addEventListener('click', function () {
-
+                plusButton?.addEventListener('click', function () {
                     if (!selectedVariant) {
                         return;
                     }
@@ -233,19 +202,23 @@
                     }
 
                     quantityValue.textContent = quantity;
-
                     plusButton.disabled = quantity >= stock;
                 });
-
             });
+        }
 
-        });
+        document.addEventListener('DOMContentLoaded', initCatalogProductCards);
+        document.addEventListener('livewire:navigated', initCatalogProductCards);
     </script>
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        function initCatalogWelcomeMore() {
             document.querySelectorAll('.catalog-welcome').forEach(block => {
+                if (block.dataset.welcomeBound === '1') {
+                    return;
+                }
+
                 const text = block.querySelector('.catalog-welcome-text');
                 const button = block.querySelector('.catalog-welcome-more');
 
@@ -253,7 +226,8 @@
                     return;
                 }
 
-                // Если текст и так помещается — кнопку не показываем
+                block.dataset.welcomeBound = '1';
+
                 if (text.scrollHeight <= text.clientHeight) {
                     button.style.display = 'none';
                     return;
@@ -269,7 +243,10 @@
                         : 'Читать далее';
                 });
             });
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', initCatalogWelcomeMore);
+        document.addEventListener('livewire:navigated', initCatalogWelcomeMore);
     </script>
 
 @endsection

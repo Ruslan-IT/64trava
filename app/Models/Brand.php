@@ -21,6 +21,11 @@ class Brand extends Model
         'seo_description',
         'seo_keywords',
         'promo_percent',
+        'sort_order',
+    ];
+
+    protected $casts = [
+        'sort_order' => 'integer',
     ];
 
     public function products()
@@ -45,6 +50,10 @@ class Brand extends Model
         static::creating(function ($brand) {
             if (empty($brand->slug)) {
                 $brand->slug = Str::slug($brand->name);
+            }
+
+            if (! isset($brand->sort_order) || $brand->sort_order === null) {
+                $brand->sort_order = (int) static::query()->max('sort_order') + 1;
             }
         });
     }

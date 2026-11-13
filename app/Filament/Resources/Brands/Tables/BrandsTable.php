@@ -38,12 +38,19 @@ class BrandsTable
                     ->counts('products')
                     ->sortable(),
 
+                TextColumn::make('sort_order')
+                    ->label('Порядок')
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
 
             ])
+
+            ->defaultSort('sort_order')
+            ->reorderable('sort_order')
 
             ->filters([])
 

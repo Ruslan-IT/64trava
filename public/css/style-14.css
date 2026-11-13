@@ -4272,7 +4272,7 @@ input, button {
     align-items: center;
     gap: 8px;
     margin-top: 30px;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
     font-size: 13px;
 }
 
@@ -4636,6 +4636,7 @@ input, button {
 .catalog-welcome {
     display: flex;
     width: 100%;
+    margin: -30px 0 0 0;
 }
 
 .catalog-welcome-image {
@@ -4652,7 +4653,7 @@ input, button {
 }
 
 .catalog-welcome-content {
-    margin-left: 30px;
+    /*margin-left: 30px;*/
 }
 
 .catalog-welcome-title {

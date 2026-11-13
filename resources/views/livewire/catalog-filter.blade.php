@@ -815,7 +815,7 @@
                             <span class="catalog-welcome-country"></span>
                         </div>
 
-                        <div class="catalog-welcome-text">
+                        <div class="catalog-welcome-text">40
                             @if($brandSubcategory)
                                 @if(filled($brandSubcategory->seo_text))
                                     {!! $brandSubcategory->seo_text !!}
@@ -866,22 +866,27 @@
                 @else
                     <div class="catalog-category-buttons-row">
                         <a href="{{ route('catalog.index') }}"
+                           wire:click.prevent="selectCategory(null)"
                            class="category-button{{ ! $currentCategory && ! $brand && ! $tag ? ' active' : '' }}">
                             Все семена
                         </a>
                         <a href="{{ route('catalog.category', 'autoflower') }}"
+                           wire:click.prevent="selectCategory('autoflower')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'autoflower' ? ' active' : '' }}">
                             Автоцветущие
                         </a>
                         <a href="{{ route('catalog.category', 'feminised') }}"
+                           wire:click.prevent="selectCategory('feminised')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'feminised' ? ' active' : '' }}">
                             Феминизированные
                         </a>
                         <a href="{{ route('catalog.category', 'regular') }}"
+                           wire:click.prevent="selectCategory('regular')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'regular' ? ' active' : '' }}">
                             Регулярные
                         </a>
                         <a href="{{ route('catalog.category', 'miksy-semian') }}"
+                           wire:click.prevent="selectCategory('miksy-semian')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'miksy-semian' ? ' active' : '' }}">
                             Миксы семян
                         </a>
@@ -889,18 +894,22 @@
 
                     <div class="catalog-category-buttons-row">
                         <a href="{{ route('catalog.category', 'akcii') }}"
+                           wire:click.prevent="selectCategory('akcii')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'akcii' ? ' active' : '' }}">
                             Семена по акции
                         </a>
                         <a href="{{ route('catalog.category', 'krupnye-packi') }}"
+                           wire:click.prevent="selectCategory('krupnye-packi')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'krupnye-packi' ? ' active' : '' }}">
                             Крупные пачки
                         </a>
                         <a href="{{ route('catalog.category', 'naibolee-populiarnye') }}"
+                           wire:click.prevent="selectCategory('naibolee-populiarnye')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'naibolee-populiarnye' ? ' active' : '' }}">
                             Наиболее популярные
                         </a>
                         <a href="{{ route('catalog.category', 'novinki') }}"
+                           wire:click.prevent="selectCategory('novinki')"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'novinki' ? ' active' : '' }}">
                             Новинки
                         </a>
@@ -1019,6 +1028,98 @@
 
 @script
 <script>
+    window.__catalogCategoryWire = $wire;
+
+    window.__catalogApplyCategory = function (payload, pushStateOverride) {
+        if (!payload || typeof payload !== 'object') {
+            return;
+        }
+
+        const pushState = typeof pushStateOverride === 'boolean'
+            ? pushStateOverride
+            : payload.pushState !== false;
+
+        if (payload.title) {
+            document.title = payload.title;
+        }
+
+        const description = document.querySelector('meta[name="description"]');
+        if (description) {
+            if (payload.description) {
+                description.setAttribute('content', payload.description);
+            } else {
+                description.remove();
+            }
+        } else if (payload.description) {
+            const meta = document.createElement('meta');
+            meta.setAttribute('name', 'description');
+            meta.setAttribute('content', payload.description);
+            document.head.appendChild(meta);
+        }
+
+        const keywords = document.querySelector('meta[name="keywords"]');
+        if (keywords) {
+            if (payload.keywords) {
+                keywords.setAttribute('content', payload.keywords);
+            } else {
+                keywords.remove();
+            }
+        } else if (payload.keywords) {
+            const meta = document.createElement('meta');
+            meta.setAttribute('name', 'keywords');
+            meta.setAttribute('content', payload.keywords);
+            document.head.appendChild(meta);
+        }
+
+        const canonical = document.querySelector('link[rel="canonical"]');
+        if (canonical && payload.canonical) {
+            canonical.setAttribute('href', payload.canonical);
+        }
+
+        if (payload.url) {
+            const state = {
+                catalogAjax: true,
+                slug: payload.slug ?? null,
+            };
+
+            if (pushState) {
+                history.pushState(state, '', payload.url);
+            } else {
+                history.replaceState(state, '', payload.url);
+            }
+        }
+    };
+
+    if (!window.__catalogCategoryPopstate) {
+        window.__catalogCategoryPopstate = true;
+
+        const initialSlug = @json(optional($currentCategory)->slug);
+        history.replaceState({ catalogAjax: true, slug: initialSlug }, '', window.location.href);
+
+        window.addEventListener('popstate', (event) => {
+            if (!window.__catalogCategoryWire) {
+                return;
+            }
+
+            const path = window.location.pathname.replace(/\/+$/, '') || '/';
+            let slug = null;
+
+            if (path === '/vsesemena') {
+                slug = null;
+            } else {
+                const match = path.match(/^\/cat\/([^/]+)$/);
+
+                if (!match) {
+                    return;
+                }
+
+                slug = match[1];
+            }
+
+            window.__catalogCategoryWire.selectCategory(slug, false);
+        });
+    }
+
     if (!window.__catalogFilterAccordion) {
         window.__catalogFilterAccordion = true;
 
