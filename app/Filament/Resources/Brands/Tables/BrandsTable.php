@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Table;
 
 class BrandsTable
@@ -38,9 +39,26 @@ class BrandsTable
                     ->counts('products')
                     ->sortable(),
 
-                TextColumn::make('sort_order')
+                TextInputColumn::make('sort_order')
                     ->label('Порядок')
-                    ->sortable(),
+                    ->type('number')
+                    ->inputMode('numeric')
+                    ->step(1)
+                    ->rules([
+                        'required',
+                        'integer',
+                        'min:0',
+                    ])
+                    ->validationAttribute('порядок')
+                    ->validationMessages([
+                        'required' => 'Укажите порядок отображения.',
+                        'integer' => 'Порядок должен быть целым числом.',
+                        'min' => 'Порядок не может быть отрицательным.',
+                    ])
+                    ->sortable()
+                    ->afterStateUpdated(function ($livewire): void {
+                        $livewire->resetTable();
+                    }),
 
                 TextColumn::make('created_at')
                     ->label('Создан')
@@ -50,7 +68,6 @@ class BrandsTable
             ])
 
             ->defaultSort('sort_order')
-            ->reorderable('sort_order')
 
             ->filters([])
 

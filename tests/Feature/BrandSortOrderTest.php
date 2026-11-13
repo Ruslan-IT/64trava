@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -34,6 +33,22 @@ class BrandSortOrderTest extends TestCase
         return $app;
     }
 
+    public function test_filament_list_shows_editable_sort_order_column(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $this->actingAs(User::factory()->create());
+
+        $brand = Brand::query()->create([
+            'name' => 'Editable Sort Column Brand',
+            'sort_order' => 7,
+        ]);
+
+        Livewire::test(ListBrands::class)
+            ->assertSee('Порядок')
+            ->assertTableColumnExists('sort_order')
+            ->assertCanSeeTableRecords([$brand]);
+    }
+
     public function test_filament_list_follows_saved_manual_sort_order(): void
     {
         Filament::setCurrentPanel('admin');
@@ -56,34 +71,47 @@ class BrandSortOrderTest extends TestCase
             ->assertCanSeeTableRecords([$first, $second, $third], inOrder: true);
     }
 
-    public function test_filament_reorder_persists_sort_order_in_database(): void
+    public function test_sort_order_can_be_updated_inline_from_brands_table(): void
     {
         Filament::setCurrentPanel('admin');
         $this->actingAs(User::factory()->create());
 
         $alpha = Brand::query()->create([
-            'name' => 'Reorder Alpha',
-            'sort_order' => 1,
+            'name' => 'Inline Alpha',
+            'sort_order' => 5,
         ]);
         $beta = Brand::query()->create([
-            'name' => 'Reorder Beta',
-            'sort_order' => 2,
-        ]);
-        $gamma = Brand::query()->create([
-            'name' => 'Reorder Gamma',
-            'sort_order' => 3,
+            'name' => 'Inline Beta',
+            'sort_order' => 10,
         ]);
 
         Livewire::test(ListBrands::class)
-            ->call('reorderTable', [
-                (string) $gamma->id,
-                (string) $alpha->id,
-                (string) $beta->id,
-            ]);
+            ->call('updateTableColumnState', 'sort_order', (string) $beta->getKey(), 1)
+            ->assertHasNoErrors();
 
-        $this->assertSame(1, $gamma->fresh()->sort_order);
-        $this->assertSame(2, $alpha->fresh()->sort_order);
-        $this->assertSame(3, $beta->fresh()->sort_order);
+        $this->assertSame(1, $beta->fresh()->sort_order);
+        $this->assertSame(5, $alpha->fresh()->sort_order);
+
+        Livewire::test(ListBrands::class)
+            ->assertCanSeeTableRecords([$beta->fresh(), $alpha->fresh()], inOrder: true);
+    }
+
+    public function test_negative_sort_order_is_rejected_inline(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $this->actingAs(User::factory()->create());
+
+        $brand = Brand::query()->create([
+            'name' => 'Invalid Sort Brand',
+            'sort_order' => 4,
+        ]);
+
+        $response = Livewire::test(ListBrands::class)
+            ->call('updateTableColumnState', 'sort_order', (string) $brand->getKey(), -1);
+
+        $this->assertSame(4, $brand->fresh()->sort_order);
+        $this->assertIsArray($response->effects['returns'][0] ?? null);
+        $this->assertArrayHasKey('error', $response->effects['returns'][0]);
     }
 
     public function test_home_brands_section_matches_manual_sort_order(): void
@@ -120,46 +148,80 @@ class BrandSortOrderTest extends TestCase
             [$first->id, $second->id, $third->id],
             Brand::query()
                 ->whereIn('id', [$first->id, $second->id, $third->id])
-                ->orderBy('sort_order')
-                ->orderBy('id')
+                ->ordered()
                 ->pluck('id')
                 ->all()
         );
     }
 
-    public function test_doctors_choice_id_28_is_first_after_initial_ordering(): void
+    public function test_seedbanks_page_matches_manual_sort_order(): void
     {
-        DB::table('brands')->where('id', 28)->delete();
-
-        $otherEarly = Brand::query()->create([
-            'name' => 'Early Other Brand',
-            'slug' => 'early-other-brand-sort',
+        $second = Brand::query()->create([
+            'name' => 'Seedbank Brand Second',
+            'sort_order' => 200,
         ]);
-        $otherLate = Brand::query()->create([
-            'name' => 'Late Other Brand',
-            'slug' => 'late-other-brand-sort',
+        $first = Brand::query()->create([
+            'name' => 'Seedbank Brand First',
+            'sort_order' => 100,
         ]);
-
-        DB::table('brands')->insert([
-            'id' => 28,
-            'name' => "Doctor's Choice",
-            'slug' => 'doctors-choice-sort-test',
-            'sort_order' => 999,
-            'created_at' => now(),
-            'updated_at' => now(),
+        $third = Brand::query()->create([
+            'name' => 'Seedbank Brand Third',
+            'sort_order' => 300,
         ]);
 
-        $this->applyInitialBrandSortOrder();
+        $html = $this->get(route('seedbanks.index'))
+            ->assertOk()
+            ->getContent();
 
         $ordered = Brand::query()
-            ->whereIn('id', [$otherEarly->id, $otherLate->id, 28])
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+            ->whereIn('id', [$first->id, $second->id, $third->id])
+            ->ordered()
+            ->pluck('slug')
+            ->all();
 
-        $this->assertSame(28, $ordered->first()->id);
-        $this->assertSame(1, (int) $ordered->first()->sort_order);
-        $this->assertTrue($ordered->get(1)->sort_order < $ordered->get(2)->sort_order);
+        $this->assertSame(
+            [$first->slug, $second->slug, $third->slug],
+            $ordered
+        );
+
+        $positions = array_map(
+            fn (string $slug) => strpos($html, 'brands/'.$slug),
+            $ordered
+        );
+
+        $this->assertTrue($positions[0] < $positions[1]);
+        $this->assertTrue($positions[1] < $positions[2]);
+    }
+
+    public function test_equal_sort_order_is_stable_by_id(): void
+    {
+        $earlier = Brand::query()->create([
+            'name' => 'Equal Sort Earlier',
+            'sort_order' => 50,
+        ]);
+        $later = Brand::query()->create([
+            'name' => 'Equal Sort Later',
+            'sort_order' => 50,
+        ]);
+
+        $this->assertSame(
+            [$earlier->id, $later->id],
+            Brand::query()
+                ->whereIn('id', [$earlier->id, $later->id])
+                ->ordered()
+                ->pluck('id')
+                ->all()
+        );
+
+        $home = $this->brandsSectionHtml($this->get(route('home'))->assertOk()->getContent());
+        $this->assertTrue(
+            strpos($home, 'Equal Sort Earlier') < strpos($home, 'Equal Sort Later')
+        );
+
+        $seedbanks = $this->get(route('seedbanks.index'))->assertOk()->getContent();
+        $this->assertTrue(
+            strpos($seedbanks, 'brands/'.$earlier->slug) < strpos($seedbanks, 'brands/'.$later->slug)
+        );
     }
 
     public function test_new_brands_are_appended_to_the_end(): void
@@ -208,8 +270,7 @@ class BrandSortOrderTest extends TestCase
 
         $orderedIds = Brand::query()
             ->whereIn('id', [$fewProducts->id, $manyProducts->id])
-            ->orderBy('sort_order')
-            ->orderBy('id')
+            ->ordered()
             ->pluck('id')
             ->all();
 
@@ -230,34 +291,5 @@ class BrandSortOrderTest extends TestCase
         }
 
         return $matches[1];
-    }
-
-    protected function applyInitialBrandSortOrder(): void
-    {
-        $doctorsChoiceId = DB::table('brands')
-            ->where('id', 28)
-            ->orWhere('slug', 'doctors-choice')
-            ->orWhere('name', "Doctor's Choice")
-            ->orderByRaw('CASE WHEN id = 28 THEN 0 ELSE 1 END')
-            ->value('id');
-
-        $orderedIds = [];
-
-        if ($doctorsChoiceId !== null) {
-            $orderedIds[] = (int) $doctorsChoiceId;
-        }
-
-        $remainingIds = DB::table('brands')
-            ->when($doctorsChoiceId !== null, fn ($query) => $query->where('id', '!=', $doctorsChoiceId))
-            ->orderBy('id')
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        foreach (array_merge($orderedIds, $remainingIds) as $index => $id) {
-            DB::table('brands')
-                ->where('id', $id)
-                ->update(['sort_order' => $index + 1]);
-        }
     }
 }

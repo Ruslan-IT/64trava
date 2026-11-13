@@ -12,7 +12,7 @@ class SeedbanksController
     {
         $categories = Category::orderBy('name')->get();
 
-        $seedbanks = Brand::all();
+        $seedbanks = Brand::query()->ordered()->get();
 
         return view('seedbanks.index', compact('seedbanks', 'categories'));
     }

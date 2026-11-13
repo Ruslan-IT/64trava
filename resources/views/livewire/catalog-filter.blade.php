@@ -815,7 +815,7 @@
                             <span class="catalog-welcome-country"></span>
                         </div>
 
-                        <div class="catalog-welcome-text">40
+                        <div class="catalog-welcome-text">
                             @if($brandSubcategory)
                                 @if(filled($brandSubcategory->seo_text))
                                     {!! $brandSubcategory->seo_text !!}

@@ -17,10 +17,7 @@ class HomeController
 
         /*Один запрос в бд */
         $products = Product::visibleInCatalog()->get();
-        $brands = Brand::query()
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+        $brands = Brand::query()->ordered()->get();
         $categories = Category::orderBy('name')->get();
         $tags = Tag::all();
 
