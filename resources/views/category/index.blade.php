@@ -213,40 +213,36 @@
 
 
     <script>
-        function initCatalogWelcomeMore() {
-            document.querySelectorAll('.catalog-welcome').forEach(block => {
-                if (block.dataset.welcomeBound === '1') {
-                    return;
-                }
+        window.catalogWelcomeText = function catalogWelcomeText() {
+            return {
+                expanded: false,
+                showMore: false,
+                init() {
+                    this.expanded = false;
+                    this.$nextTick(() => this.measure());
+                    requestAnimationFrame(() => this.measure());
+                },
+                measure() {
+                    const el = this.$refs.text;
 
-                const text = block.querySelector('.catalog-welcome-text');
-                const button = block.querySelector('.catalog-welcome-more');
+                    if (!el || el.dataset.empty === '1') {
+                        this.showMore = false;
+                        this.expanded = false;
+                        return;
+                    }
 
-                if (!text || !button) {
-                    return;
-                }
+                    this.expanded = false;
 
-                block.dataset.welcomeBound = '1';
-
-                if (text.scrollHeight <= text.clientHeight) {
-                    button.style.display = 'none';
-                    return;
-                }
-
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-
-                    text.classList.toggle('is-expanded');
-
-                    button.textContent = text.classList.contains('is-expanded')
-                        ? 'Свернуть'
-                        : 'Читать далее';
-                });
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', initCatalogWelcomeMore);
-        document.addEventListener('livewire:navigated', initCatalogWelcomeMore);
+                    this.$nextTick(() => {
+                        this.showMore = el.scrollHeight > el.clientHeight + 1;
+                        this.expanded = false;
+                    });
+                },
+                toggle() {
+                    this.expanded = !this.expanded;
+                },
+            };
+        };
     </script>
 
 @endsection

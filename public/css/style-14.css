@@ -4654,11 +4654,16 @@ input, button {
 
 .catalog-welcome-content {
     /*margin-left: 30px;*/
+    --catalog-welcome-font-size: 16px;
+    --catalog-welcome-line-height: 24px;
+    --catalog-welcome-lines: 3;
+    --catalog-welcome-text-height: calc(var(--catalog-welcome-line-height) * var(--catalog-welcome-lines));
 }
 
 .catalog-welcome-title {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     font-size: 30px;
     font-weight: 700;
 }
@@ -4676,35 +4681,90 @@ input, button {
 .catalog-welcome-text {
     max-width: 650px;
     margin-top: 20px;
-    font-size: 16px;
-    line-height: 1.4;
-    max-height: 110px;
+    min-height: var(--catalog-welcome-text-height);
+    max-height: var(--catalog-welcome-text-height);
     overflow: hidden;
     position: relative;
+    font-size: var(--catalog-welcome-font-size);
+    font-weight: 400;
+    line-height: var(--catalog-welcome-line-height);
+    color: #000;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.catalog-welcome-text > :first-child {
+    margin-top: 0;
+}
+
+.catalog-welcome-text > :last-child {
+    margin-bottom: 0;
+}
+
+.catalog-welcome-text p,
+.catalog-welcome-text h1,
+.catalog-welcome-text h2,
+.catalog-welcome-text h3,
+.catalog-welcome-text h4,
+.catalog-welcome-text h5,
+.catalog-welcome-text h6,
+.catalog-welcome-text li,
+.catalog-welcome-text span,
+.catalog-welcome-text strong,
+.catalog-welcome-text em,
+.catalog-welcome-text a {
+    margin: 0;
+    padding: 0;
+    font-size: var(--catalog-welcome-font-size);
+    font-weight: 400;
+    line-height: var(--catalog-welcome-line-height);
+    color: inherit;
 }
 
 .catalog-welcome-text.is-expanded {
     max-height: none;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+}
+
+.catalog-welcome-more-wrap {
+    min-height: 44px;
+    margin-top: 12px;
 }
 
 .catalog-welcome-more {
     display: inline-block;
-    margin-top: 10px;
-}
-
-.catalog-welcome-more {
-    display: inline-block;
-    margin-top: 20px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: #000;
     font-size: 16px;
+    line-height: 24px;
     text-decoration: underline;
+    cursor: pointer;
+}
+
+.catalog-welcome-more:hover,
+.catalog-welcome-more:focus-visible {
+    color: #008f3c;
+}
+
+[x-cloak] {
+    display: none !important;
 }
 
 .catalog-category-buttons {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    margin: 60px 0 60px 0;
+    margin: 0px 0 60px 0;
 }
 
 .catalog-category-buttons-row {
@@ -4789,6 +4849,8 @@ input, button {
         justify-content: center;
         margin-top: 20px;
         font-size: 20px;
+        line-height: 1.3;
+        text-align: center;
     }
 
     .catalog-welcome-country {
@@ -4797,13 +4859,19 @@ input, button {
 
     .catalog-welcome-text {
         margin-top: 20px;
-        font-size: 14px;
+        font-size: var(--catalog-welcome-font-size);
+        line-height: var(--catalog-welcome-line-height);
         text-align: left;
+        max-width: 100%;
+    }
+
+    .catalog-welcome-more-wrap {
+        min-height: 44px;
     }
 
     .catalog-welcome-more {
-        margin-top: 20px;
-        font-size: 14px;
+        font-size: 16px;
+        line-height: 24px;
     }
 
     .catalog-category-buttons {
