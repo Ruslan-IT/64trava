@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Brand;
 use App\Models\Category;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Product extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'brand_id',
@@ -180,6 +183,48 @@ class Product extends Model
 
         static::saved($forgetCatalogFacets);
         static::deleted($forgetCatalogFacets);
+        static::restored($forgetCatalogFacets);
+        static::forceDeleted($forgetCatalogFacets);
+
+        // Soft delete must keep image paths and files intact for restore.
+        // Physical cleanup runs only on permanent deletion.
+        static::forceDeleting(function (Product $product): void {
+            $product->deleteUnreferencedImageFiles();
+        });
+    }
+
+    /**
+     * Remove image files that are no longer referenced by any product
+     * (including soft-deleted ones). Safe for shared URL-hash imports.
+     */
+    public function deleteUnreferencedImageFiles(): void
+    {
+        $paths = collect([$this->image])
+            ->merge($this->gallery ?? [])
+            ->filter(fn ($path) => filled($path) && is_string($path))
+            ->unique()
+            ->values();
+
+        foreach ($paths as $path) {
+            if ($this->imagePathIsReferencedByAnotherProduct($path)) {
+                continue;
+            }
+
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+    }
+
+    protected function imagePathIsReferencedByAnotherProduct(string $path): bool
+    {
+        return static::withTrashed()
+            ->where('id', '!=', $this->id)
+            ->where(function (Builder $query) use ($path): void {
+                $query->where('image', $path)
+                    ->orWhereJsonContains('gallery', $path);
+            })
+            ->exists();
     }
 
     public function getCountryFlagAttribute(): string

@@ -55,7 +55,7 @@ class CheckoutController extends Controller
 
             $variant = $variants[$variantId] ?? null;
 
-            if (!$variant) {
+            if (! $variant || ! $variant->product) {
                 continue;
             }
 
@@ -252,7 +252,7 @@ class CheckoutController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            if (!$variant) {
+            if (! $variant || ! $variant->product) {
                 continue;
             }
 

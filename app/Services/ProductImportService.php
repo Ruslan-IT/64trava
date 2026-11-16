@@ -49,7 +49,11 @@ class ProductImportService
             $name = $this->productName($row['strain'], $row['seed_type'] ?? null, $brand->name);
             $slug = Str::slug($name);
 
-            $product = Product::query()->where('slug', $slug)->first() ?? new Product();
+            $product = Product::withTrashed()->where('slug', $slug)->first() ?? new Product();
+
+            if ($product->exists && $product->trashed()) {
+                $product->restore();
+            }
 
             $product->fill([
                 'brand_id' => $brand->id,

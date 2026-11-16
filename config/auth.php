@@ -114,4 +114,19 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Site Owner Emails
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated list of emails allowed to permanently delete products.
+    | Ordinary panel admins can soft-delete and restore, but not force-delete.
+    |
+    */
+
+    'owner_emails' => array_values(array_filter(array_map(
+        static fn (string $email): string => trim($email),
+        explode(',', (string) env('OWNER_EMAILS', ''))
+    ))),
+
 ];

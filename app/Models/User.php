@@ -29,4 +29,24 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Site owner: can permanently delete products.
+     * Configure emails via OWNER_EMAILS (comma-separated) in .env.
+     */
+    public function isOwner(): bool
+    {
+        $emails = config('auth.owner_emails', []);
+
+        if (! is_array($emails) || $emails === [] || blank($this->email)) {
+            return false;
+        }
+
+        $normalized = array_map(
+            static fn (string $email): string => mb_strtolower(trim($email)),
+            $emails
+        );
+
+        return in_array(mb_strtolower(trim($this->email)), $normalized, true);
+    }
 }

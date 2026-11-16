@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditProduct extends EditRecord
@@ -13,7 +15,15 @@ class EditProduct extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->label('В корзину'),
+            RestoreAction::make()
+                ->label('Восстановить'),
+            ForceDeleteAction::make()
+                ->label('Удалить навсегда')
+                ->requiresConfirmation()
+                ->modalHeading('Окончательно удалить товар?')
+                ->modalDescription('Товар, связи и неиспользуемые фотографии будут удалены безвозвратно. Это действие доступно только владельцу.'),
         ];
     }
 }
