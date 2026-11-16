@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -28,6 +30,7 @@ class CatalogCategoryNavigationTest extends TestCase
 
         $app['config']->set('database.connections.mysql', $mysql);
         $app['config']->set('database.default', 'mysql');
+        $app['config']->set('cache.default', 'array');
 
         return $app;
     }
@@ -194,6 +197,121 @@ class CatalogCategoryNavigationTest extends TestCase
             ->assertOk()
             ->assertSee('Visible Feminised Alpha')
             ->assertSee('Other Feminised Beta');
+    }
+
+    public function test_empty_category_switch_avoids_repeat_facet_queries_and_keeps_seo(): void
+    {
+        CatalogFilter::forgetFacetCache();
+
+        $empty = Category::query()->updateOrCreate(
+            ['slug' => 'akcii'],
+            [
+                'name' => 'Семена по акции',
+                'description' => 'Пустая категория для скорости',
+                'seo_title' => 'SEO Акции',
+                'seo_description' => 'Desc акции',
+                'seo_keywords' => 'kw akcii',
+            ]
+        );
+
+        Category::query()->updateOrCreate(
+            ['slug' => 'novinki'],
+            [
+                'name' => 'Новинки',
+                'description' => 'Тоже пустая',
+                'seo_title' => 'SEO Новинки',
+                'seo_description' => 'Desc новинки',
+                'seo_keywords' => 'kw novinki',
+            ]
+        );
+
+        $this->assertSame(0, $empty->products()->count());
+
+        $component = Livewire::test(CatalogFilter::class, [
+            'currentCategory' => null,
+            'catalogInfo' => null,
+        ]);
+
+        // Warm facet cache on first switch.
+        $component->call('selectCategory', 'akcii')
+            ->assertSet('currentCategory.slug', 'akcii')
+            ->assertSee('Товары не найдены')
+            ->assertSee('Пустая категория для скорости');
+
+        $effects = json_encode($component->effects, JSON_UNESCAPED_UNICODE);
+        $this->assertStringContainsString('cat\\/akcii', $effects);
+        $this->assertStringContainsString('SEO Акции', $effects);
+
+        $queries = [];
+        DB::listen(function ($query) use (&$queries) {
+            $queries[] = $query->sql;
+        });
+
+        $component->call('selectCategory', 'novinki')
+            ->assertSet('currentCategory.slug', 'novinki')
+            ->assertSee('Товары не найдены')
+            ->assertSee('Тоже пустая');
+
+        $productTableQueries = array_values(array_filter(
+            $queries,
+            fn (string $sql) => str_contains(strtolower($sql), 'from `products`')
+                || str_contains(strtolower($sql), 'from products')
+        ));
+
+        // After facets are cached, an empty-category switch should only hit products
+        // for the empty paginate/count — not rebuild seed/genotype/token facet scans.
+        $this->assertLessThanOrEqual(
+            3,
+            count($productTableQueries),
+            'Unexpected product facet rebuild queries: '.implode(' | ', $productTableQueries)
+        );
+
+        $this->assertFalse(
+            collect($productTableQueries)->contains(
+                fn (string $sql) => str_contains(strtolower($sql), 'seed_type')
+                    && str_contains(strtolower($sql), 'count')
+            ),
+            'seed_type facet counts should come from cache on the second empty switch'
+        );
+    }
+
+    public function test_sequential_category_switches_preserve_url_payload_and_filter_reset(): void
+    {
+        Category::query()->updateOrCreate(
+            ['slug' => 'autoflower'],
+            ['name' => 'Автоцветущие', 'seo_title' => 'SEO Auto']
+        );
+        Category::query()->updateOrCreate(
+            ['slug' => 'feminised'],
+            ['name' => 'Феминизированные', 'seo_title' => 'SEO Fem']
+        );
+
+        $component = Livewire::test(CatalogFilter::class)
+            ->set('seedTypes', ['F'])
+            ->set('sort', 'thc_desc')
+            ->call('selectCategory', 'autoflower')
+            ->assertSet('currentCategory.slug', 'autoflower')
+            ->assertSet('seedTypes', [])
+            ->assertSet('sort', '')
+            ->call('selectCategory', 'feminised')
+            ->assertSet('currentCategory.slug', 'feminised')
+            ->call('selectCategory', null)
+            ->assertSet('currentCategory', null);
+
+        $effects = json_encode($component->effects);
+        $this->assertStringContainsString('vsesemena', $effects);
+        $this->assertStringContainsString('pushState', $effects);
+    }
+
+    public function test_product_save_clears_catalog_facet_cache(): void
+    {
+        Cache::put(CatalogFilter::FACETS_CACHE_KEY, ['seedTypeCounts' => ['F' => 1]], 120);
+        $this->assertTrue(Cache::has(CatalogFilter::FACETS_CACHE_KEY));
+
+        $brand = Brand::query()->create(['name' => 'Cache Bust Brand']);
+        $this->product($brand, 'Cache Bust Product', 'F');
+
+        $this->assertFalse(Cache::has(CatalogFilter::FACETS_CACHE_KEY));
     }
 
     private function catalogButtons(string $html): string

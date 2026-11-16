@@ -857,52 +857,70 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="catalog-category-buttons-row">
+                    <div class="catalog-category-buttons-row" wire:loading.class="is-switching" wire:target="selectCategory">
                         <a href="{{ route('catalog.index') }}"
                            wire:click.prevent="selectCategory(null)"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ ! $currentCategory && ! $brand && ! $tag ? ' active' : '' }}">
                             Все семена
                         </a>
                         <a href="{{ route('catalog.category', 'autoflower') }}"
                            wire:click.prevent="selectCategory('autoflower')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'autoflower' ? ' active' : '' }}">
                             Автоцветущие
                         </a>
                         <a href="{{ route('catalog.category', 'feminised') }}"
                            wire:click.prevent="selectCategory('feminised')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'feminised' ? ' active' : '' }}">
                             Феминизированные
                         </a>
                         <a href="{{ route('catalog.category', 'regular') }}"
                            wire:click.prevent="selectCategory('regular')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'regular' ? ' active' : '' }}">
                             Регулярные
                         </a>
                         <a href="{{ route('catalog.category', 'miksy-semian') }}"
                            wire:click.prevent="selectCategory('miksy-semian')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'miksy-semian' ? ' active' : '' }}">
                             Миксы семян
                         </a>
                     </div>
 
-                    <div class="catalog-category-buttons-row">
+                    <div class="catalog-category-buttons-row" wire:loading.class="is-switching" wire:target="selectCategory">
                         <a href="{{ route('catalog.category', 'akcii') }}"
                            wire:click.prevent="selectCategory('akcii')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'akcii' ? ' active' : '' }}">
                             Семена по акции
                         </a>
                         <a href="{{ route('catalog.category', 'krupnye-packi') }}"
                            wire:click.prevent="selectCategory('krupnye-packi')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'krupnye-packi' ? ' active' : '' }}">
                             Крупные пачки
                         </a>
                         <a href="{{ route('catalog.category', 'naibolee-populiarnye') }}"
                            wire:click.prevent="selectCategory('naibolee-populiarnye')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'naibolee-populiarnye' ? ' active' : '' }}">
                             Наиболее популярные
                         </a>
                         <a href="{{ route('catalog.category', 'novinki') }}"
                            wire:click.prevent="selectCategory('novinki')"
+                           wire:loading.attr="aria-disabled"
+                           wire:target="selectCategory"
                            class="category-button{{ $currentCategory && $currentCategory->slug === 'novinki' ? ' active' : '' }}">
                             Новинки
                         </a>
@@ -1130,6 +1148,10 @@
                 return;
             }
 
+            if (window.__catalogCategorySwitching) {
+                return;
+            }
+
             const path = window.location.pathname.replace(/\/+$/, '') || '/';
             let slug = null;
 
@@ -1145,7 +1167,11 @@
                 slug = match[1];
             }
 
-            window.__catalogCategoryWire.selectCategory(slug, false);
+            window.__catalogCategorySwitching = true;
+            Promise.resolve(window.__catalogCategoryWire.selectCategory(slug, false))
+                .finally(() => {
+                    window.__catalogCategorySwitching = false;
+                });
         });
     }
 

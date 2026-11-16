@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Models\Brand;
 use App\Models\Category;
@@ -172,6 +173,13 @@ class Product extends Model
                 $product->slug = Str::slug($product->name);
             }
         });
+
+        $forgetCatalogFacets = static function (): void {
+            Cache::forget('catalog.filter.facets.v1');
+        };
+
+        static::saved($forgetCatalogFacets);
+        static::deleted($forgetCatalogFacets);
     }
 
     public function getCountryFlagAttribute(): string

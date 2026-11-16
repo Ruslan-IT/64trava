@@ -4782,6 +4782,10 @@ input, button {
     gap: 15px;
 }
 
+.catalog-category-buttons-row.is-switching {
+    pointer-events: none;
+}
+
 @media (max-width: 1100px) {
     .catalog-category-buttons-row {
         flex-wrap: wrap;

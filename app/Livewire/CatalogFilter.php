@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\BrandSubcategory;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,6 +13,10 @@ use Livewire\WithPagination;
 class CatalogFilter extends Component
 {
     use WithPagination;
+
+    public const FACETS_CACHE_KEY = 'catalog.filter.facets.v1';
+
+    public const FACETS_CACHE_TTL_SECONDS = 120;
 
     #[Url(as: 'search', except: '')]
     public string $search = '';
@@ -204,7 +209,10 @@ class CatalogFilter extends Component
             $this->currentCategory = null;
             $this->catalogInfo = null;
         } else {
-            $category = Category::query()->where('slug', $slug)->firstOrFail();
+            // Avoid a second Category lookup when Livewire already hydrated the model.
+            $category = ($this->currentCategory && $this->currentCategory->slug === $slug)
+                ? $this->currentCategory
+                : Category::query()->where('slug', $slug)->firstOrFail();
             $this->currentCategory = $category;
             $this->catalogInfo = $category;
             $url = route('catalog.category', $category->slug);
@@ -235,11 +243,14 @@ class CatalogFilter extends Component
     {
         $query = Product::query()
             ->visibleInCatalog()
-            ->with(['brand', 'categories', 'tags']);
+            ->with(['brand', 'categories', 'tags', 'variants']);
 
         if ($this->currentCategory) {
-            $query->whereHas('categories', function ($q) {
-                $q->where('categories.id', $this->currentCategory->id);
+            $query->whereExists(function ($q) {
+                $q->selectRaw('1')
+                    ->from('category_product')
+                    ->whereColumn('category_product.product_id', 'products.id')
+                    ->where('category_product.category_id', $this->currentCategory->id);
             });
         }
 
@@ -402,72 +413,159 @@ class CatalogFilter extends Component
 
         $products = $query->paginate(24);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Счётчики "Сведение"
-        |--------------------------------------------------------------------------
-        */
+        // Facet sidebar is global (not scoped to the selected category). Cache it so
+        // empty/full category switches do not rebuild the same 10+ queries every time.
+        // The post-paginate whereHas/brand/tag mutations that used to sit here were dead:
+        // they mutated the already-executed builder and never ran another query.
+        $facets = $this->cachedFacetPayload();
 
-        $seedTypeCounts = [
-            'F' => Product::visibleInCatalog()->where('seed_type', 'F')->count(),
-            'A' => Product::visibleInCatalog()->where('seed_type', 'A')->count(),
-            'R' => Product::visibleInCatalog()->where('seed_type', 'R')->count(),
-            'AR' => Product::visibleInCatalog()->where('seed_type', 'AR')->count(),
-        ];
-
-        /*
-        |--------------------------------------------------------------------------
-        | Счётчики "Генотип"
-        |--------------------------------------------------------------------------
-        */
-
-        $sativa = Product::sativaValueSql();
-
-        $genotypeCounts = [
-            'sativa' => Product::visibleInCatalog()->whereRaw("$sativa > 50")->count(),
-            'balance' => Product::visibleInCatalog()->whereRaw("$sativa = 50")->count(),
-            'indica' => Product::visibleInCatalog()->whereRaw("$sativa < 50")->count(),
-        ];
-
-        if ($this->currentCategory) {
-            $query->whereHas('categories', function ($q) {
-                $q->where('categories.id', $this->currentCategory->id);
-            });
-        }
-
-        if ($this->brand) {
-            $query->where('brand_id', $this->brand->id);
-        }
-
-        if ($this->tag) {
-            $query->whereHas('tags', function ($q) {
-                $q->where('tags.id', $this->tag->id);
-            });
-        }
-
-        $categories = $this->categoryButtons();
         $brandSubcategories = $this->brand
             ? $this->brand->subcategories()->published()->get()
             : collect();
 
         return view('livewire.catalog-filter', [
             'products' => $products,
-            'seedTypeCounts' => $seedTypeCounts,
-            'genotypeCounts' => $genotypeCounts,
-            'cbdCount' => Product::visibleInCatalog()->whereNotNull('cbd')->where('cbd', '>', 0)->count(),
-            'tasteOptions' => $this->tokenOptions('taste'),
-            'effectOptions' => $this->tokenOptions('effect'),
-            'aromaOptions' => $this->tokenOptions('aroma'),
-            'harvestOptions' => $this->harvestOptions(),
+            'seedTypeCounts' => $facets['seedTypeCounts'],
+            'genotypeCounts' => $facets['genotypeCounts'],
+            'cbdCount' => $facets['cbdCount'],
+            'tasteOptions' => $facets['tasteOptions'],
+            'effectOptions' => $facets['effectOptions'],
+            'aromaOptions' => $facets['aromaOptions'],
+            'harvestOptions' => $facets['harvestOptions'],
             'sortOptions' => $this->sortOptions(),
             'currentCategory' => $this->currentCategory,
             'brand' => $this->brand,
             'tag' => $this->tag,
-            'categories' => $categories,
+            // Buttons are hardcoded in the Blade; keep an empty collection for BC.
+            'categories' => collect(),
             'brandSubcategories' => $brandSubcategories,
             'brandSubcategory' => $this->brandSubcategory,
             'catalogInfo' => $this->catalogInfo,
         ]);
+    }
+
+    public static function forgetFacetCache(): void
+    {
+        Cache::forget(self::FACETS_CACHE_KEY);
+    }
+
+    /**
+     * Global filter facet options shared by every category switch.
+     *
+     * @return array{
+     *     seedTypeCounts: array<string, int>,
+     *     genotypeCounts: array<string, int>,
+     *     cbdCount: int,
+     *     tasteOptions: array<string, int>,
+     *     effectOptions: array<string, int>,
+     *     aromaOptions: array<string, int>,
+     *     harvestOptions: array<string, int>
+     * }
+     */
+    protected function cachedFacetPayload(): array
+    {
+        return Cache::remember(self::FACETS_CACHE_KEY, self::FACETS_CACHE_TTL_SECONDS, function () {
+            return $this->buildFacetPayload();
+        });
+    }
+
+    /**
+     * @return array{
+     *     seedTypeCounts: array<string, int>,
+     *     genotypeCounts: array<string, int>,
+     *     cbdCount: int,
+     *     tasteOptions: array<string, int>,
+     *     effectOptions: array<string, int>,
+     *     aromaOptions: array<string, int>,
+     *     harvestOptions: array<string, int>
+     * }
+     */
+    protected function buildFacetPayload(): array
+    {
+        $sativa = Product::sativaValueSql();
+
+        $seedTypeCounts = array_replace(
+            ['F' => 0, 'A' => 0, 'R' => 0, 'AR' => 0],
+            Product::visibleInCatalog()
+                ->whereIn('seed_type', ['F', 'A', 'R', 'AR'])
+                ->selectRaw('seed_type, COUNT(*) as aggregate')
+                ->groupBy('seed_type')
+                ->pluck('aggregate', 'seed_type')
+                ->map(fn ($count) => (int) $count)
+                ->all()
+        );
+
+        $genotypeRow = Product::visibleInCatalog()
+            ->selectRaw("
+                SUM(CASE WHEN {$sativa} > 50 THEN 1 ELSE 0 END) as sativa,
+                SUM(CASE WHEN {$sativa} = 50 THEN 1 ELSE 0 END) as balance,
+                SUM(CASE WHEN {$sativa} < 50 THEN 1 ELSE 0 END) as indica
+            ")
+            ->first();
+
+        $genotypeCounts = [
+            'sativa' => (int) ($genotypeRow->sativa ?? 0),
+            'balance' => (int) ($genotypeRow->balance ?? 0),
+            'indica' => (int) ($genotypeRow->indica ?? 0),
+        ];
+
+        $cbdCount = Product::visibleInCatalog()
+            ->whereNotNull('cbd')
+            ->where('cbd', '>', 0)
+            ->count();
+
+        $tokenColumns = Product::visibleInCatalog()
+            ->where(function ($query) {
+                $query->where(function ($inner) {
+                    $inner->whereNotNull('taste')->where('taste', '!=', '');
+                })->orWhere(function ($inner) {
+                    $inner->whereNotNull('effect')->where('effect', '!=', '');
+                })->orWhere(function ($inner) {
+                    $inner->whereNotNull('aroma')->where('aroma', '!=', '');
+                });
+            })
+            ->get(['taste', 'effect', 'aroma']);
+
+        $tasteOptions = $this->countTokensFromRows($tokenColumns, 'taste');
+        $effectOptions = $this->countTokensFromRows($tokenColumns, 'effect');
+        $aromaOptions = $this->countTokensFromRows($tokenColumns, 'aroma');
+
+        $harvestOptions = $this->harvestOptions();
+
+        return [
+            'seedTypeCounts' => $seedTypeCounts,
+            'genotypeCounts' => $genotypeCounts,
+            'cbdCount' => $cbdCount,
+            'tasteOptions' => $tasteOptions,
+            'effectOptions' => $effectOptions,
+            'aromaOptions' => $aromaOptions,
+            'harvestOptions' => $harvestOptions,
+        ];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Product>  $rows
+     * @return array<string, int>
+     */
+    protected function countTokensFromRows($rows, string $column): array
+    {
+        $counts = [];
+
+        foreach ($rows as $row) {
+            $value = $row->{$column} ?? null;
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            foreach (Product::splitCharacteristicTokens($value) as $token) {
+                $counts[$token] = ($counts[$token] ?? 0) + 1;
+            }
+        }
+
+        ksort($counts, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $counts;
     }
 
     /**
