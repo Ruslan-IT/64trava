@@ -310,7 +310,7 @@ class BrandSubcategoryTest extends TestCase
 
     private function catalogButtons(string $html): string
     {
-        if (! preg_match('/<div class="catalog-category-buttons">(.*?)(?:<div class="catalog-controls"|$)/s', $html, $matches)) {
+        if (! preg_match('/<div class="catalog-category-buttons">(.*?)(?:<div\s+class="[^"]*catalog-welcome|$)/s', $html, $matches)) {
             return '';
         }
 

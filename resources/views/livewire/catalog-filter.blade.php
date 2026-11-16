@@ -765,7 +765,27 @@
     <div class="catalog-content">
         <div class="catalog-products">
 
-           @if($currentCategory || $brand || $tag)
+            @php
+                if ($currentCategory || $brand || $tag) {
+                    $welcomeHeading = $brandSubcategory
+                        ? $brandSubcategory->heading()
+                        : $catalogInfo->name;
+                    $welcomeHtml = $brandSubcategory
+                        ? (string) ($brandSubcategory->seo_text ?? '')
+                        : (string) ($catalogInfo->description ?? '');
+                } else {
+                    $welcomeHeading = 'Все семена';
+                    $welcomeHtml = '';
+                }
+
+                $hasWelcomeText = trim(
+                    html_entity_decode(
+                        strip_tags($welcomeHtml),
+                        ENT_QUOTES | ENT_HTML5,
+                        'UTF-8'
+                    )
+                ) !== '';
+            @endphp
 
                 <div class="catalog-welcome">
 
@@ -807,27 +827,7 @@
 
                     @endif
 
-                    @php
-                        $welcomeHeading = $brandSubcategory
-                            ? $brandSubcategory->heading()
-                            : $catalogInfo->name;
-                        $welcomeHtml = $brandSubcategory
-                            ? (string) ($brandSubcategory->seo_text ?? '')
-                            : (string) ($catalogInfo->description ?? '');
-                        $hasWelcomeText = trim(
-                            html_entity_decode(
-                                strip_tags($welcomeHtml),
-                                ENT_QUOTES | ENT_HTML5,
-                                'UTF-8'
-                            )
-                        ) !== '';
-                    @endphp
-
-                    <div
-                        class="catalog-welcome-content"
-                        wire:key="catalog-welcome-{{ $brand?->getKey() ?? 'b' }}-{{ $currentCategory?->getKey() ?? 'c' }}-{{ $tag?->getKey() ?? 't' }}-{{ $brandSubcategory?->getKey() ?? 's' }}"
-                        x-data="catalogWelcomeText()"
-                    >
+                    <div class="catalog-welcome-content">
 
                         <div class="catalog-welcome-title">
                             <h1 style="margin:0;padding:0;font:inherit;line-height:inherit;">{{ $welcomeHeading }}</h1>
@@ -835,57 +835,10 @@
                             <span class="catalog-welcome-country"></span>
                         </div>
 
-                        <div
-                            class="catalog-welcome-text"
-                            x-ref="text"
-                            :class="{ 'is-expanded': expanded }"
-                            @unless($hasWelcomeText) data-empty="1" @endunless
-                        >
-                            @if($hasWelcomeText)
-                                {!! $welcomeHtml !!}
-                            @endif
-                        </div>
-
-                        <div class="catalog-welcome-more-wrap">
-                            <button
-                                type="button"
-                                class="catalog-welcome-more"
-                                x-cloak
-                                x-show="showMore"
-                                x-on:click="toggle()"
-                                :aria-expanded="expanded ? 'true' : 'false'"
-                            >
-                                <span x-text="expanded ? 'Свернуть' : 'Читать далее'"></span>
-                            </button>
-                        </div>
-
                     </div>
 
                 </div>
 
-            @else
-
-                <div class="catalog-welcome">
-                    <div
-                        class="catalog-welcome-content"
-                        wire:key="catalog-welcome-all-seeds"
-                    >
-                        <div class="catalog-welcome-title">
-                            <h1 style="margin:0;padding:0;font:inherit;line-height:inherit;">Все семена</h1>
-                            <span class="catalog-welcome-slash"></span>
-                            <span class="catalog-welcome-country"></span>
-                        </div>
-
-                        <div
-                            class="catalog-welcome-text"
-                            data-empty="1"
-                        ></div>
-
-                        <div class="catalog-welcome-more-wrap"></div>
-                    </div>
-                </div>
-
-            @endif
             @if(! $brand || $brandSubcategories->isNotEmpty())
             <div class="catalog-category-buttons">
 
@@ -958,6 +911,42 @@
 
             </div>
             @endif
+
+                <div
+                    class="catalog-welcome catalog-welcome-body"
+                    wire:key="catalog-welcome-{{ $brand?->getKey() ?? 'b' }}-{{ $currentCategory?->getKey() ?? 'c' }}-{{ $tag?->getKey() ?? 't' }}-{{ $brandSubcategory?->getKey() ?? 's' }}"
+                    x-data="catalogWelcomeText()"
+                >
+                    <div class="catalog-welcome-content">
+
+                        <div
+                            class="catalog-welcome-text"
+                            x-ref="text"
+                            :class="{ 'is-expanded': expanded }"
+                            @unless($hasWelcomeText) data-empty="1" @endunless
+                        >
+                            @if($hasWelcomeText)
+                                {!! $welcomeHtml !!}
+                            @endif
+                        </div>
+
+                        <div class="catalog-welcome-more-wrap">
+                            @if($currentCategory || $brand || $tag)
+                                <button
+                                    type="button"
+                                    class="catalog-welcome-more"
+                                    x-cloak
+                                    x-show="showMore"
+                                    x-on:click="toggle()"
+                                    :aria-expanded="expanded ? 'true' : 'false'"
+                                >
+                                    <span x-text="expanded ? 'Свернуть' : 'Читать далее'"></span>
+                                </button>
+                            @endif
+                        </div>
+
+                    </div>
+                </div>
 
 
             <div class="catalog-controls">

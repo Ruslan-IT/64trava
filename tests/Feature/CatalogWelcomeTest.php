@@ -161,7 +161,7 @@ class CatalogWelcomeTest extends TestCase
 
     protected function welcomeSection(string $html): string
     {
-        if (! preg_match('/<div class="catalog-welcome">([\s\S]*?)(?:<div class="catalog-category-buttons"|$)/', $html, $matches)) {
+        if (! preg_match('/<div\s+class="catalog-welcome catalog-welcome-body"[^>]*>([\s\S]*?)(?:<div class="catalog-controls"|$)/', $html, $matches)) {
             $this->fail('catalog-welcome block not found');
         }
 
