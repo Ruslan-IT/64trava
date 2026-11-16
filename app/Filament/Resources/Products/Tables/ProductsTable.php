@@ -6,18 +6,11 @@ use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductsTable
 {
@@ -64,9 +57,6 @@ class ProductsTable
             ])
 
             ->filters([
-                TrashedFilter::make()
-                    ->label('Корзина'),
-
                 SelectFilter::make('categories')
                     ->label('Категория')
                     ->relationship('categories', 'name')
@@ -90,32 +80,13 @@ class ProductsTable
 
             ->recordActions([
                 EditAction::make(),
-                RestoreAction::make()
-                    ->label('Восстановить'),
-                ForceDeleteAction::make()
-                    ->label('Удалить навсегда')
-                    ->requiresConfirmation()
-                    ->modalHeading('Окончательно удалить товар?')
-                    ->modalDescription('Товар, связи и неиспользуемые фотографии будут удалены безвозвратно. Это действие доступно только владельцу.'),
             ])
 
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->label('В корзину'),
-                    RestoreBulkAction::make()
-                        ->label('Восстановить'),
-                    ForceDeleteBulkAction::make()
-                        ->label('Удалить навсегда')
-                        ->requiresConfirmation()
-                        ->modalHeading('Окончательно удалить выбранные товары?')
-                        ->modalDescription('Товары, связи и неиспользуемые фотографии будут удалены безвозвратно. Это действие доступно только владельцу.'),
                 ]),
-            ])
-
-            ->modifyQueryUsing(fn (Builder $query) => $query
-                ->withoutGlobalScopes([
-                    SoftDeletingScope::class,
-                ]));
+            ]);
     }
 }

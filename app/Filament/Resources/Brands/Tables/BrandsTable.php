@@ -73,12 +73,14 @@ class BrandsTable
 
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->label('В корзину'),
             ])
 
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->label('В корзину'),
                 ]),
             ]);
     }

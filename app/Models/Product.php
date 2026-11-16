@@ -144,7 +144,8 @@ class Product extends Model
 
     public function brand()
     {
-        return $this->belongsTo(Brand::class, 'brand_id');
+        // Keep brand data visible on products even if the brand is in the trash.
+        return $this->belongsTo(Brand::class, 'brand_id')->withTrashed();
     }
 
     public function categories()

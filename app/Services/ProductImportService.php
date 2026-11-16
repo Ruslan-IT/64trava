@@ -41,10 +41,14 @@ class ProductImportService
             $brandName = trim($row['brand']);
             $brandSlug = Str::slug($brandName);
 
-            $brand = Brand::query()->firstOrCreate(
+            $brand = Brand::withTrashed()->firstOrCreate(
                 ['slug' => $brandSlug],
                 ['name' => $brandName]
             );
+
+            if ($brand->trashed()) {
+                $brand->restore();
+            }
 
             $name = $this->productName($row['strain'], $row['seed_type'] ?? null, $brand->name);
             $slug = Str::slug($name);

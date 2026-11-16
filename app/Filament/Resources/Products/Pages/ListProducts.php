@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
 use App\Jobs\ImportProductsFromExcelJob;
+use App\Models\Product;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -24,9 +25,24 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->trashAction(),
             $this->importExcelAction(),
             CreateAction::make(),
         ];
+    }
+
+    private function trashAction(): Action
+    {
+        return Action::make('trash')
+            ->label(fn (): string => 'Корзина ('.$this->trashedProductsCount().')')
+            ->icon(Heroicon::OutlinedTrash)
+            ->color('gray')
+            ->url(ProductResource::getUrl('trash'));
+    }
+
+    private function trashedProductsCount(): int
+    {
+        return Product::onlyTrashed()->count();
     }
 
     private function importExcelAction(): Action
