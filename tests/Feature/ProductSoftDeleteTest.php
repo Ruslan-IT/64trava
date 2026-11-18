@@ -286,4 +286,84 @@ class ProductSoftDeleteTest extends TestCase
         $this->assertEquals(2222, (float) $reimported->price);
         $this->assertSame(1, Product::withTrashed()->where('slug', $slug)->count());
     }
+
+    public function test_import_matches_trashed_product_by_sku_when_slug_differs(): void
+    {
+        $brandName = 'Sku Soft Brand '.uniqid();
+        $service = app(ProductImportService::class);
+        $sku = 'SKU-SOFT-MATCH-'.uniqid();
+
+        $product = $service->import([
+            'strain' => 'Original Soft Strain '.uniqid(),
+            'brand' => $brandName,
+            'seed_type' => 'F',
+            'price' => 100,
+            'variants' => [[
+                'package_size' => 3,
+                'sku' => $sku,
+                'price' => 100,
+                'stock' => 1,
+            ]],
+        ]);
+
+        $productId = $product->id;
+        $product->delete();
+
+        $reimported = $service->import([
+            'strain' => 'Renamed Soft Strain '.uniqid(),
+            'brand' => $brandName,
+            'seed_type' => 'A',
+            'price' => 250,
+            'variants' => [[
+                'package_size' => 3,
+                'sku' => $sku,
+                'price' => 250,
+                'stock' => 4,
+            ]],
+        ]);
+
+        $this->assertSame($productId, $reimported->id);
+        $this->assertNull($reimported->deleted_at);
+        $this->assertEquals(250, (float) $reimported->price);
+        $this->assertSame(1, ProductVariant::query()->where('sku', $sku)->count());
+        $this->assertSame($productId, ProductVariant::query()->where('sku', $sku)->value('product_id'));
+    }
+
+    public function test_import_updates_active_product_matched_by_sku_instead_of_duplicating(): void
+    {
+        $brandName = 'Active Sku Brand '.uniqid();
+        $service = app(ProductImportService::class);
+        $sku = 'SKU-ACTIVE-'.uniqid();
+
+        $owner = $service->import([
+            'strain' => 'Owner Soft Strain '.uniqid(),
+            'brand' => $brandName,
+            'seed_type' => 'F',
+            'price' => 100,
+            'variants' => [[
+                'package_size' => 3,
+                'sku' => $sku,
+                'price' => 100,
+                'stock' => 1,
+            ]],
+        ]);
+
+        $updated = $service->import([
+            'strain' => 'Intruder Soft Strain '.uniqid(),
+            'brand' => $brandName,
+            'seed_type' => 'R',
+            'price' => 200,
+            'variants' => [[
+                'package_size' => 1,
+                'sku' => $sku,
+                'price' => 200,
+                'stock' => 1,
+            ]],
+        ]);
+
+        $this->assertSame($owner->id, $updated->id);
+        $this->assertEquals(200, (float) $updated->price);
+        $this->assertSame(1, Product::query()->where('brand_id', $owner->brand_id)->count());
+        $this->assertSame(1, ProductVariant::query()->where('sku', $sku)->count());
+    }
 }

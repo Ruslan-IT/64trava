@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Jobs\ImportProductsFromExcelJob;
+use App\Models\Brand;
 use App\Models\User;
 use App\Services\ExcelProductImportService;
 use Filament\Actions\Action;
@@ -53,11 +54,16 @@ class ExcelProductImportFilamentTest extends TestCase
             });
     }
 
-    public function test_import_action_queues_the_file_without_importing_it(): void
+    public function test_import_action_queues_the_file_with_selected_brand(): void
     {
         $this->actingAs(User::factory()->create());
         Queue::fake();
         Storage::fake('local');
+
+        Brand::query()->create([
+            'name' => "Barney's Farm",
+            'slug' => 'barneys-farm-filament-'.uniqid(),
+        ]);
 
         $mock = Mockery::mock(ExcelProductImportService::class);
         $mock->shouldNotReceive('import');
@@ -65,6 +71,7 @@ class ExcelProductImportFilamentTest extends TestCase
 
         Livewire::test(ListProducts::class)
             ->callAction('importExcel', [
+                'brand' => "Barney's Farm",
                 'file' => $this->xlsxUpload(),
             ])
             ->assertHasNoFormErrors();
@@ -75,15 +82,20 @@ class ExcelProductImportFilamentTest extends TestCase
         $this->assertStringContainsString('выполняется в фоне', (string) $notification->getBody());
 
         Queue::assertPushed(ImportProductsFromExcelJob::class, function (ImportProductsFromExcelJob $job): bool {
-            return $job->brand === '' && Storage::disk('local')->exists($job->path);
+            return $job->brand === "Barney's Farm" && Storage::disk('local')->exists($job->path);
         });
     }
 
-    public function test_import_modal_has_no_brand_field_and_queues_empty_brand(): void
+    public function test_import_modal_requires_brand_and_queues_selected_brand(): void
     {
         $this->actingAs(User::factory()->create());
         Queue::fake();
         Storage::fake('local');
+
+        Brand::query()->create([
+            'name' => 'Doctor Choice',
+            'slug' => 'doctor-choice-filament-'.uniqid(),
+        ]);
 
         $mock = Mockery::mock(ExcelProductImportService::class);
         $mock->shouldNotReceive('import');
@@ -92,15 +104,24 @@ class ExcelProductImportFilamentTest extends TestCase
         Livewire::test(ListProducts::class)
             ->mountAction('importExcel')
             ->assertFormFieldExists('file')
-            ->assertFormFieldDoesNotExist('brand')
+            ->assertFormFieldExists('brand')
             ->fillForm([
+                'file' => $this->xlsxUpload(),
+            ])
+            ->callMountedAction()
+            ->assertHasFormErrors(['brand']);
+
+        Livewire::test(ListProducts::class)
+            ->mountAction('importExcel')
+            ->fillForm([
+                'brand' => 'Doctor Choice',
                 'file' => $this->xlsxUpload(),
             ])
             ->callMountedAction()
             ->assertHasNoFormErrors();
 
         Queue::assertPushed(ImportProductsFromExcelJob::class, function (ImportProductsFromExcelJob $job): bool {
-            return $job->brand === '' && Storage::disk('local')->exists($job->path);
+            return $job->brand === 'Doctor Choice' && Storage::disk('local')->exists($job->path);
         });
     }
 
@@ -110,8 +131,14 @@ class ExcelProductImportFilamentTest extends TestCase
         Queue::fake();
         Storage::fake('local');
 
+        Brand::query()->create([
+            'name' => 'Keep File Farm',
+            'slug' => 'keep-file-farm-'.uniqid(),
+        ]);
+
         Livewire::test(ListProducts::class)
             ->callAction('importExcel', [
+                'brand' => 'Keep File Farm',
                 'file' => $this->xlsxUpload(),
             ])
             ->assertHasNoFormErrors();
@@ -126,12 +153,18 @@ class ExcelProductImportFilamentTest extends TestCase
         $this->actingAs(User::factory()->create());
         Queue::fake();
 
+        Brand::query()->create([
+            'name' => 'Reject Farm',
+            'slug' => 'reject-farm-'.uniqid(),
+        ]);
+
         $mock = Mockery::mock(ExcelProductImportService::class);
         $mock->shouldNotReceive('import');
         $this->app->instance(ExcelProductImportService::class, $mock);
 
         Livewire::test(ListProducts::class)
             ->callAction('importExcel', [
+                'brand' => 'Reject Farm',
                 'file' => UploadedFile::fake()->create('notes.txt', 1, 'text/plain'),
             ])
             ->assertHasFormErrors(['file']);

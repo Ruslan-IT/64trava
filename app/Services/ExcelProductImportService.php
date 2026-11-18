@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -156,21 +157,35 @@ class ExcelProductImportService
                 'brand' => $payload['brand'] ?? null,
             ]);
 
-            $countBefore = Product::query()->count();
-
             try {
                 $product = $this->products->import($payload);
-            } catch (QueryException $exception) {
-                if (! str_contains($exception->getMessage(), 'seed_type')) {
-                    throw $exception;
-                }
-
+            } catch (UniqueConstraintViolationException $exception) {
                 $result['errors'][] = [
                     'row' => $excelRow,
-                    'field' => 'Type',
-                    'message' => 'Строка '.$excelRow.': тип нельзя сохранить в текущем столбце products.seed_type',
+                    'field' => 'sku',
+                    'message' => 'Строка '.$excelRow.': конфликт уникальных данных (возможно SKU или slug). '.$this->shortExceptionMessage($exception),
                 ];
                 continue;
+            } catch (QueryException $exception) {
+                if (str_contains($exception->getMessage(), 'seed_type')) {
+                    $result['errors'][] = [
+                        'row' => $excelRow,
+                        'field' => 'Type',
+                        'message' => 'Строка '.$excelRow.': тип нельзя сохранить в текущем столбце products.seed_type',
+                    ];
+                    continue;
+                }
+
+                if ($this->isRowLevelDatabaseConflict($exception)) {
+                    $result['errors'][] = [
+                        'row' => $excelRow,
+                        'field' => 'database',
+                        'message' => 'Строка '.$excelRow.': '.$this->shortExceptionMessage($exception),
+                    ];
+                    continue;
+                }
+
+                throw $exception;
             } catch (ValidationException $exception) {
                 $result['errors'][] = [
                     'row' => $excelRow,
@@ -180,7 +195,7 @@ class ExcelProductImportService
                 continue;
             }
 
-            if (Product::query()->count() > $countBefore) {
+            if ($product->wasRecentlyCreated) {
                 $result['imported']++;
             } else {
                 $result['updated']++;
@@ -839,5 +854,27 @@ class ExcelProductImportService
         }
 
         return true;
+    }
+
+    private function isRowLevelDatabaseConflict(QueryException $exception): bool
+    {
+        $message = $exception->getMessage();
+
+        return str_contains($message, 'Duplicate entry')
+            || str_contains($message, '1062')
+            || str_contains($message, 'UNIQUE constraint failed')
+            || str_contains($message, 'Integrity constraint violation');
+    }
+
+    private function shortExceptionMessage(QueryException $exception): string
+    {
+        $message = $exception->getMessage();
+        $sqlStatePos = strpos($message, ' (Connection:');
+
+        if ($sqlStatePos !== false) {
+            $message = substr($message, 0, $sqlStatePos);
+        }
+
+        return trim($message);
     }
 }

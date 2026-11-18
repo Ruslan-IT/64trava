@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -60,7 +61,12 @@ class ProductsTable
             ->filters([
                 SelectFilter::make('categories')
                     ->label('Категория')
-                    ->relationship('categories', 'name')
+                    // Скрываем дубль «Автоцветущие» (id=1, avtocvetushhie); оставляем autoflower (id=9).
+                    ->relationship(
+                        'categories',
+                        'name',
+                        fn ($query) => $query->whereNotIn('categories.id', Category::HIDDEN_IN_ADMIN_IDS),
+                    )
                     ->multiple()
                     ->preload(),
 

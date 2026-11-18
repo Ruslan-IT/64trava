@@ -84,7 +84,7 @@ class CatalogCategoryNavigationTest extends TestCase
             $this->assertStringNotContainsString('wire:navigate', $buttons);
             $this->assertStringContainsString("wire:click.prevent=\"selectCategory('".$slug."')\"", $buttons);
             $this->assertMatchesRegularExpression(
-                '/href="[^"]*\/cat\/'.preg_quote($slug, '/').'"[^>]*class="category-button active"/',
+                '/href="[^"]*\/catalog\/'.preg_quote($slug, '/').'"[^>]*class="category-button active"/',
                 $buttons
             );
             $this->assertStringContainsString('<title>SEO '.$name.' | Dutch Seeds</title>', $html);
@@ -138,7 +138,7 @@ class CatalogCategoryNavigationTest extends TestCase
 
         $effects = json_encode($component->effects);
         $this->assertStringContainsString('__catalogApplyCategory', $effects);
-        $this->assertStringContainsString('cat\\/feminised', $effects);
+        $this->assertStringContainsString('catalog\\/feminised', $effects);
         $this->assertStringContainsString('pushState', $effects);
 
         $component
@@ -239,7 +239,7 @@ class CatalogCategoryNavigationTest extends TestCase
             ->assertSee('Пустая категория для скорости');
 
         $effects = json_encode($component->effects, JSON_UNESCAPED_UNICODE);
-        $this->assertStringContainsString('cat\\/akcii', $effects);
+        $this->assertStringContainsString('catalog\\/akcii', $effects);
         $this->assertStringContainsString('SEO Акции', $effects);
 
         $queries = [];

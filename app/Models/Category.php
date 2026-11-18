@@ -10,6 +10,14 @@ class Category extends Model
 {
     use HasFactory;
 
+    /**
+     * Дубликаты категорий, скрытые в Filament.
+     * id=1 (avtocvetushhie) — дубль «Автоцветущие»; на витрине используется id=9 (autoflower).
+     */
+    public const HIDDEN_IN_ADMIN_IDS = [
+        1, // avtocvetushhie
+    ];
+
     protected $fillable = [
         'name',
         'slug',

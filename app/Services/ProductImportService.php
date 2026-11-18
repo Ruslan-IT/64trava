@@ -41,21 +41,31 @@ class ProductImportService
             $brandName = trim($row['brand']);
             $brandSlug = Str::slug($brandName);
 
-            $brand = Brand::withTrashed()->firstOrCreate(
-                ['slug' => $brandSlug],
-                ['name' => $brandName]
-            );
+            // Soft-deleted brands keep the unique slug — find with trashed, then restore.
+            $brand = Brand::withTrashed()->where('slug', $brandSlug)->first();
 
-            if ($brand->trashed()) {
+            if ($brand === null) {
+                $brand = Brand::query()->create([
+                    'slug' => $brandSlug,
+                    'name' => $brandName,
+                ]);
+            } elseif ($brand->trashed()) {
                 $brand->restore();
             }
 
             $name = $this->productName($row['strain'], $row['seed_type'] ?? null, $brand->name);
             $slug = Str::slug($name);
 
-            $product = Product::withTrashed()->where('slug', $slug)->first() ?? new Product();
+            $product = Product::withTrashed()->where('slug', $slug)->first();
 
-            if ($product->exists && $product->trashed()) {
+            // SoftDeletes keep variants; match by SKU so reimport restores instead of colliding.
+            if ($product === null) {
+                $product = $this->findProductByVariantSkus($row['variants'] ?? []);
+            }
+
+            if ($product === null) {
+                $product = new Product();
+            } elseif ($product->trashed()) {
                 $product->restore();
             }
 
@@ -87,6 +97,36 @@ class ProductImportService
 
             return $product;
         });
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variants
+     */
+    private function findProductByVariantSkus(array $variants): ?Product
+    {
+        $skus = [];
+
+        foreach ($variants as $variant) {
+            $sku = isset($variant['sku']) ? trim((string) $variant['sku']) : '';
+
+            if ($sku !== '') {
+                $skus[] = $sku;
+            }
+        }
+
+        if ($skus === []) {
+            return null;
+        }
+
+        $productId = ProductVariant::query()
+            ->whereIn('sku', $skus)
+            ->value('product_id');
+
+        if ($productId === null) {
+            return null;
+        }
+
+        return Product::withTrashed()->find($productId);
     }
 
     private function productName(string $strain, ?string $seedType, string $brand): string
@@ -187,7 +227,27 @@ class ProductImportService
         $model = ProductVariant::query()
             ->where('product_id', $product->id)
             ->where('package_size', $variant['package_size'])
-            ->first() ?? new ProductVariant();
+            ->first();
+
+        if ($model === null) {
+            $model = ProductVariant::query()
+                ->where('sku', $variant['sku'])
+                ->first();
+        }
+
+        if ($model === null) {
+            $model = new ProductVariant();
+        } elseif ((int) $model->product_id !== (int) $product->id) {
+            $owner = Product::withTrashed()->find($model->product_id);
+
+            // Soft-deleted owners keep SKUs. Reassign to the imported product.
+            // Active owners keep the SKU — report a clear validation error.
+            if ($owner !== null && ! $owner->trashed()) {
+                throw ValidationException::withMessages([
+                    'variants' => ['SKU '.$variant['sku'].' уже используется другим товаром.'],
+                ]);
+            }
+        }
 
         $attributes = [
             'product_id' => $product->id,

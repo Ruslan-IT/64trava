@@ -256,7 +256,7 @@ class CatalogController
         $tag = $data['tag'] ?? null;
 
         $data['brandSubcategory'] = $brandSubcategory;
-        $data['seoTitle'] = 'Каталог | Dutch Seeds';
+        $data['seoTitle'] = 'Все семена | Dutch Seeds';
         $data['seoDescription'] = 'Каталог Dutch Seeds.';
         $data['seoKeywords'] = 'Каталог, новинки, информация, Dutch Seeds';
         $data['canonicalUrl'] = url('/news');

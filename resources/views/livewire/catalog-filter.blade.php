@@ -1158,9 +1158,9 @@
             if (path === '/vsesemena') {
                 slug = null;
             } else {
-                const match = path.match(/^\/cat\/([^/]+)$/);
+                const match = path.match(/^\/catalog\/([^/]+)$/);
 
-                if (!match) {
+                if (!match || match[1] === 'tag') {
                     return;
                 }
 

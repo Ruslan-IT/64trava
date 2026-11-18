@@ -1,13 +1,8 @@
-<div class="container">
-    <header class="header">
 
+<header class="header">
 
 
         <livewire:product-search />
-
-
-
-
 
         <!-- Меню -->
         <nav class="main-menu">
@@ -16,7 +11,7 @@
                 <div class="menu-inner">
 
                     <a href="{{ route('catalog.index') }}" class="menu-link">
-                        Категории
+                        Все семена
                     </a>
 
 
@@ -47,7 +42,7 @@
                             <a href="{{ url('/') }}">Главная</a>
                             <a href="{{ url('/delivery') }}">Доставка и оплата</a>
                             <a href="{{ url('/news') }}">Новости</a>
-                           {{-- <a href="{{ url('/text') }}">Текстовая страница</a>--}}
+                            {{-- <a href="{{ url('/text') }}">Текстовая страница</a>--}}
 
                         </div>
 
@@ -92,7 +87,7 @@
 
         </nav>
 
-    </header>
-</div>
+</header>
+
 
 

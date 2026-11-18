@@ -32,17 +32,24 @@ Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
 
 
 Route::get('/vsesemena', [CatalogController::class, 'index'])->name('catalog.index');
-Route::redirect('/cat', '/vsesemena', 301);
 
+Route::get('/catalog/tag/{tag}', [CatalogController::class, 'tag'])->name('catalog.tag');
 
-Route::get('/cat/{category}', [CatalogController::class, 'index'])->name('catalog.category');
+Route::get('/catalog/{category}', [CatalogController::class, 'index'])->name('catalog.category');
 
 Route::get('/brands/{brand}', [CatalogController::class, 'brand'])->name('catalog.brand');
 
 Route::get('/brands/{brand}/{subcategory}', [CatalogController::class, 'brandSubcategory'])->name('catalog.brand.subcategory');
 
-
-Route::get('/cat/tag/{tag}', [CatalogController::class, 'tag'])->name('catalog.tag');
+// Legacy / alternate catalog URLs
+Route::redirect('/catalog', '/vsesemena', 301);
+Route::redirect('/cat', '/vsesemena', 301);
+Route::get('/cat/tag/{tag}', function (string $tag) {
+    return redirect('/catalog/tag/'.$tag, 301);
+});
+Route::get('/cat/{category}', function (string $category) {
+    return redirect('/catalog/'.$category, 301);
+});
 
 
 Route::get('product/{slug}', [ProductsController::class, 'show'])->name('product.show');

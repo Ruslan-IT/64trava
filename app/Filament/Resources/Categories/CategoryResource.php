@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoryResource extends Resource
 {
@@ -25,6 +26,13 @@ class CategoryResource extends Resource
     protected static ?string $navigationLabel = 'Категории';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
+
+    public static function getEloquentQuery(): Builder
+    {
+        // Скрываем дубль «Автоцветущие» (id=1, avtocvetushhie); оставляем autoflower (id=9).
+        return parent::getEloquentQuery()
+            ->whereNotIn('id', Category::HIDDEN_IN_ADMIN_IDS);
+    }
 
     public static function form(Schema $schema): Schema
     {

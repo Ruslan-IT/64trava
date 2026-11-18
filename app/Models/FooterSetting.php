@@ -53,7 +53,7 @@ class FooterSetting extends Model
                 'title' => '',
                 'links' => [
                     ['title' => 'Новости', 'url' => '#'],
-                    ['title' => 'Каталог', 'url' => '#'],
+                    ['title' => 'Все семена', 'url' => '/vsesemena'],
                     ['title' => 'Помощь', 'url' => '#'],
                 ],
             ],
@@ -68,7 +68,7 @@ class FooterSetting extends Model
                 'title' => '',
                 'links' => [
                     ['title' => 'Новости', 'url' => '#'],
-                    ['title' => 'Каталог', 'url' => '#'],
+                    ['title' => 'Все семена', 'url' => '/vsesemena'],
                 ],
             ],
         ];

@@ -1296,6 +1296,158 @@ class ExcelProductImportServiceTest extends TestCase
         $this->assertSame('Csv Farm', $product->brand->name);
     }
 
+    public function test_excel_import_restores_trashed_product_and_counts_as_updated(): void
+    {
+        $row = $this->sampleRow();
+        $result = $this->importSheet([$this->headers(), $row]);
+        $this->assertSame(1, $result['imported']);
+
+        $product = Product::query()->first();
+        $this->assertNotNull($product);
+        $product->delete();
+
+        $second = $this->importSheet([$this->headers(), $row]);
+
+        $this->assertSame(0, $second['imported']);
+        $this->assertSame(1, $second['updated']);
+        $this->assertSame([], $second['errors']);
+        $this->assertSame(1, Product::query()->count());
+        $this->assertNull(Product::query()->find($product->id)?->deleted_at);
+    }
+
+    public function test_excel_import_restores_trashed_brand_without_duplicate(): void
+    {
+        $brandName = 'Soft Excel Brand '.uniqid();
+        [$headers, $row] = $this->sparseRow([
+            'Brand' => $brandName,
+            'Name' => 'Soft Excel Strain '.uniqid(),
+            'Type' => 'Feminised',
+            'Art1' => 'SKU-BRAND-SOFT-'.uniqid(),
+            'Fas1' => 3,
+            'Price1' => 150,
+        ]);
+
+        $first = $this->importRows([$headers, $row]);
+        $this->assertSame(1, $first['imported']);
+
+        $brand = Brand::query()->where('name', $brandName)->first();
+        $this->assertNotNull($brand);
+        $brandId = $brand->id;
+        $brand->delete();
+
+        $row[array_search('Price1', $headers, true)] = 175;
+        $second = $this->importRows([$headers, $row]);
+
+        $this->assertSame([], $second['errors']);
+        $this->assertSame(1, $second['updated']);
+        $this->assertNull(Brand::query()->find($brandId)?->deleted_at);
+        $this->assertSame(1, Brand::withTrashed()->where('name', $brandName)->count());
+        $this->assertSame($brandId, Product::query()->first()->brand_id);
+    }
+
+    public function test_excel_import_without_brand_column_uses_fallback_brand(): void
+    {
+        $headers = $this->headers(); // no Brand column
+        $row = $this->sampleRow();
+        $row[array_search('Art1', $headers, true)] = 'SKU-FALLBACK-'.uniqid();
+        $row[array_search('Art2', $headers, true)] = '';
+        $row[array_search('Fas2', $headers, true)] = '';
+        $row[array_search('Price2', $headers, true)] = '';
+
+        $result = app(ExcelProductImportService::class)->import(
+            $this->workbook([$headers, $row]),
+            'Doctor Choice'
+        );
+
+        $this->assertSame([], $result['errors']);
+        $this->assertSame(1, $result['imported']);
+        $this->assertSame('Doctor Choice', Product::query()->first()->brand->name);
+    }
+
+    public function test_excel_import_infers_brand_from_existing_sku_when_reimporting(): void
+    {
+        $headers = $this->headers();
+        $row = $this->sampleRow();
+        $sku = 'SKU-INFER-'.uniqid();
+        $row[array_search('Art1', $headers, true)] = $sku;
+        $row[array_search('Art2', $headers, true)] = '';
+        $row[array_search('Fas2', $headers, true)] = '';
+        $row[array_search('Price2', $headers, true)] = '';
+
+        $first = app(ExcelProductImportService::class)->import(
+            $this->workbook([$headers, $row]),
+            'Doctor Choice'
+        );
+        $this->assertSame(1, $first['imported']);
+
+        $row[array_search('Price1', $headers, true)] = 1800;
+        $second = app(ExcelProductImportService::class)->import(
+            $this->workbook([$headers, $row]),
+            ''
+        );
+
+        $this->assertSame([], $second['errors']);
+        $this->assertSame(1, $second['updated']);
+        $this->assertSame('Doctor Choice', Product::query()->first()->brand->name);
+        $this->assertEquals(1800, (float) Product::query()->first()->price);
+    }
+
+    public function test_excel_import_continues_after_bad_row_and_matches_sku_without_duplicates(): void
+    {
+        $sharedSku = 'SKU-CONFLICT-'.uniqid();
+
+        [$headers, $ownerRow] = $this->sparseRow([
+            'Brand' => 'Conflict Farm',
+            'Name' => 'Owner Strain '.uniqid(),
+            'Type' => 'Feminised',
+            'Art1' => $sharedSku,
+            'Fas1' => 3,
+            'Price1' => 100,
+        ]);
+
+        [$headers2, $badRow] = $this->sparseRow([
+            'Brand' => 'Conflict Farm',
+            'Name' => '',
+            'Type' => 'Feminised',
+            'Art1' => 'SKU-BAD-'.uniqid(),
+            'Fas1' => 3,
+            'Price1' => 110,
+        ]);
+
+        [$headers3, $okRow] = $this->sparseRow([
+            'Brand' => 'Conflict Farm',
+            'Name' => 'Ok Strain '.uniqid(),
+            'Type' => 'Autoflower',
+            'Art1' => 'SKU-OK-'.uniqid(),
+            'Fas1' => 3,
+            'Price1' => 120,
+        ]);
+
+        [$headers4, $sameSkuRow] = $this->sparseRow([
+            'Brand' => 'Conflict Farm',
+            'Name' => 'Same Sku Strain '.uniqid(),
+            'Type' => 'Regular',
+            'Art1' => $sharedSku,
+            'Fas1' => 1,
+            'Price1' => 90,
+        ]);
+
+        $this->assertSame($headers, $headers2);
+        $this->assertSame($headers, $headers3);
+        $this->assertSame($headers, $headers4);
+
+        $result = $this->importRows([$headers, $ownerRow, $badRow, $sameSkuRow, $okRow]);
+
+        $this->assertSame(2, $result['imported']);
+        $this->assertSame(1, $result['updated']);
+        $this->assertNotEmpty($result['errors']);
+        $this->assertTrue(collect($result['errors'])->contains(
+            fn (array $error): bool => ($error['field'] ?? null) === 'Name'
+        ));
+        $this->assertSame(2, Product::query()->count());
+        $this->assertSame(1, ProductVariant::query()->where('sku', $sharedSku)->count());
+    }
+
     private function importSheet(array $rows): array
     {
         return app(ExcelProductImportService::class)->import($this->workbook($rows), "Barney's Farm");
