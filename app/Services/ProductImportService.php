@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProductImportService
 {
@@ -247,6 +248,10 @@ class ProductImportService
                     'variants' => ['SKU '.$variant['sku'].' уже используется другим товаром.'],
                 ]);
             }
+        } else {
+            // Variant found by package_size on this product: changing SKU must not
+            // collide with an active variant of another product (unique index).
+            $this->assertSkuAvailableForVariant($product, $model, (string) $variant['sku']);
         }
 
         $attributes = [
@@ -263,5 +268,33 @@ class ProductImportService
 
         $model->fill($attributes);
         $model->save();
+    }
+
+    private function assertSkuAvailableForVariant(Product $product, ProductVariant $model, string $sku): void
+    {
+        if ($sku === '' || $sku === (string) $model->sku) {
+            return;
+        }
+
+        $conflict = ProductVariant::query()
+            ->where('sku', $sku)
+            ->where('id', '!=', $model->id)
+            ->first();
+
+        if ($conflict === null) {
+            return;
+        }
+
+        if ((int) $conflict->product_id === (int) $product->id) {
+            return;
+        }
+
+        $owner = Product::withTrashed()->find($conflict->product_id);
+
+        if ($owner !== null && ! $owner->trashed()) {
+            throw ValidationException::withMessages([
+                'variants' => ['SKU '.$sku.' уже используется другим товаром.'],
+            ]);
+        }
     }
 }

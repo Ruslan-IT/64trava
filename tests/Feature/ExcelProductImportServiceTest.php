@@ -1364,7 +1364,7 @@ class ExcelProductImportServiceTest extends TestCase
         $this->assertSame('Doctor Choice', Product::query()->first()->brand->name);
     }
 
-    public function test_excel_import_infers_brand_from_existing_sku_when_reimporting(): void
+    public function test_excel_import_without_brand_or_fallback_does_not_infer_brand_from_sku(): void
     {
         $headers = $this->headers();
         $row = $this->sampleRow();
@@ -1386,10 +1386,10 @@ class ExcelProductImportServiceTest extends TestCase
             ''
         );
 
-        $this->assertSame([], $second['errors']);
-        $this->assertSame(1, $second['updated']);
-        $this->assertSame('Doctor Choice', Product::query()->first()->brand->name);
-        $this->assertEquals(1800, (float) Product::query()->first()->price);
+        $this->assertSame(0, $second['updated']);
+        $this->assertNotEmpty($second['errors']);
+        $this->assertSame('Brand', $second['errors'][0]['field']);
+        $this->assertSame(1500.0, (float) Product::query()->first()->price);
     }
 
     public function test_excel_import_continues_after_bad_row_and_matches_sku_without_duplicates(): void

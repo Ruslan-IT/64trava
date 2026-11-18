@@ -289,10 +289,23 @@
                                         </defs>
                                     </svg>
                                 </div>
-                                <div class="product-detail-feature-text">
-                                    <span>ТИП ЦВЕТЕНИЯ</span>
-                                    <strong>{{ $product->flowering }}</strong>
-                                </div>
+                                @php
+                                    $seedTypes = [
+                                        'F' => 'Феминизированные',
+                                        'A' => 'Автоцветущие',
+                                        'R' => 'Регулярные',
+                                        'AR' => 'Авторегулярные',
+                                    ];
+
+                                    $features['seed_type'] = $seedTypes[$product->seed_type] ?? null;
+
+                                @endphp
+                                @if($features['seed_type'])
+                                    <div class="product-detail-feature-text">
+                                        <span>ТИП СЕМЯН</span>
+                                        <strong>{{ $features['seed_type'] }}</strong>
+                                    </div>
+                                @endif
                             </div>
                             @endif
 

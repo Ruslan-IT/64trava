@@ -26,6 +26,7 @@ class ListProducts extends ListRecords
     {
         return [
             $this->trashAction(),
+            $this->lastImportReportAction(),
             $this->importExcelAction(),
             CreateAction::make(),
         ];
@@ -43,6 +44,74 @@ class ListProducts extends ListRecords
     private function trashedProductsCount(): int
     {
         return Product::onlyTrashed()->count();
+    }
+
+    private function lastImportReportAction(): Action
+    {
+        return Action::make('lastImportReport')
+            ->label('Последний отчёт импорта')
+            ->icon(Heroicon::OutlinedDocumentText)
+            ->color('gray')
+            ->modalHeading('Последний отчёт импорта Excel')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Закрыть')
+            ->disabled(fn (): bool => $this->latestImportReport() === null)
+            ->tooltip(fn (): ?string => $this->latestImportReport() === null ? 'Отчётов импорта пока нет' : null)
+            ->modalContent(function (): \Illuminate\Support\HtmlString {
+                $report = $this->latestImportReport();
+
+                if ($report === null) {
+                    return new \Illuminate\Support\HtmlString('<p>Отчётов импорта пока нет.</p>');
+                }
+
+                $errors = collect($report['data']['errors'] ?? [])->take(10)
+                    ->map(fn (array $error): string => e((string) ($error['message'] ?? json_encode($error, JSON_UNESCAPED_UNICODE))))
+                    ->implode('<br>');
+
+                $html = '<p><strong>Файл:</strong> '.e((string) ($report['data']['file'] ?? '—')).'</p>'
+                    .'<p><strong>Завершён:</strong> '.e((string) ($report['data']['finished_at'] ?? '—')).'</p>'
+                    .'<p><strong>Создано:</strong> '.(int) ($report['data']['imported'] ?? 0).'</p>'
+                    .'<p><strong>Обновлено:</strong> '.(int) ($report['data']['updated'] ?? 0).'</p>'
+                    .'<p><strong>Пропущено:</strong> '.(int) ($report['data']['skipped'] ?? 0).'</p>'
+                    .'<p><strong>Ошибок:</strong> '.count($report['data']['errors'] ?? []).'</p>'
+                    .'<p><strong>Предупреждений:</strong> '.count($report['data']['warnings'] ?? []).'</p>';
+
+                if ($errors !== '') {
+                    $html .= '<p><strong>Примеры ошибок:</strong><br>'.$errors.'</p>';
+                }
+
+                $html .= '<p class="text-sm text-gray-500">Отчёт: '.e($report['path']).'</p>';
+
+                return new \Illuminate\Support\HtmlString($html);
+            });
+    }
+
+    /**
+     * @return array{path: string, data: array<string, mixed>}|null
+     */
+    private function latestImportReport(): ?array
+    {
+        $files = collect(Storage::disk('local')->files('imports/reports'))
+            ->filter(fn (string $path): bool => str_ends_with($path, '.json'))
+            ->sortByDesc(fn (string $path): int => Storage::disk('local')->lastModified($path))
+            ->values();
+
+        $path = $files->first();
+
+        if (! is_string($path)) {
+            return null;
+        }
+
+        $decoded = json_decode((string) Storage::disk('local')->get($path), true);
+
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        return [
+            'path' => $path,
+            'data' => $decoded,
+        ];
     }
 
     private function importExcelAction(): Action
