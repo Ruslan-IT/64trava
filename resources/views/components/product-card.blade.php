@@ -90,9 +90,9 @@
         @if(\App\Models\Product::hasPublicValue($product->seed_type) || \App\Models\Product::hasPublicValue($product->height))
         <div class="product-info-row tip">
             @if(\App\Models\Product::hasPublicValue($product->seed_type))
-            <div>
+           {{-- <div>
                 Тип семян: <span class="seed-type-active">A</span>/F/R
-            </div>
+            </div>--}}
             @endif
             @if(\App\Models\Product::hasPublicValue($product->height))
             <div class="product-info-row-el">
