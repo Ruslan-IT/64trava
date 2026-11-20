@@ -21,6 +21,11 @@ class ExcelProductImportService
         'Autoflower' => 'A',
         'Regular' => 'R',
         'Autoregular' => 'AR',
+        // Русские подписи
+        'Автоцветущий феминизированный' => 'A',
+        'Феминизированный фотопериодный' => 'F',
+        'Регулярный фотопериодный' => 'R',
+        'Авторегулярный' => 'AR',
     ];
 
     private const TYPE_LABELS = [
@@ -231,15 +236,15 @@ class ExcelProductImportService
         }
 
         $haystack = mb_strtolower($type);
-        $auto = preg_match('/autoflower|autoregular/u', $haystack) === 1;
-        $regular = preg_match('/(?<!auto)regular/u', $haystack) === 1;
-        $feminised = preg_match('/feminised|feminized/u', $haystack) === 1;
+        $auto = preg_match('/autoflower|autoregular|автоцвет|авторегуляр/u', $haystack) === 1;
+        $regular = preg_match('/(?<!auto)regular|(?<!авто)регулярн/u', $haystack) === 1;
+        $feminised = preg_match('/feminised|feminized|феминиз/u', $haystack) === 1;
 
         if ($auto && $regular) {
             return 'AR';
         }
 
-        if (str_contains($haystack, 'autoregular')) {
+        if (str_contains($haystack, 'autoregular') || str_contains($haystack, 'авторегуляр')) {
             return 'AR';
         }
 

@@ -479,6 +479,10 @@ class ExcelProductImportServiceTest extends TestCase
             'Regular (Photoperiod)' => 'R',
             'Autoflower Regular' => 'AR',
             'Fast Feminised (mutantfarmer)' => 'F',
+            'Автоцветущий феминизированный' => 'A',
+            'Феминизированный фотопериодный' => 'F',
+            'Регулярный фотопериодный' => 'R',
+            'Авторегулярный' => 'AR',
         ];
 
         foreach ($cases as $label => $code) {
@@ -495,9 +499,9 @@ class ExcelProductImportServiceTest extends TestCase
         $result = $this->importSheet($rows);
 
         $this->assertSame([], $result['errors']);
-        $this->assertSame(5, Product::query()->count());
+        $this->assertSame(9, Product::query()->count());
         $this->assertEqualsCanonicalizing(
-            ['A', 'AR', 'F', 'F', 'R'],
+            ['A', 'AR', 'F', 'F', 'R', 'A', 'F', 'R', 'AR'],
             Product::query()->pluck('seed_type')->all()
         );
         $this->assertTrue(collect($result['warnings'])->contains(
