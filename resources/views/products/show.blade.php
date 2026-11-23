@@ -112,7 +112,7 @@
                     @endif
 
                     <h1 class="product-detail-title">
-                        {{ $product->name }}
+                        Семена сорта     {{ $product->name }}
                     </h1>
 
                     <div class="product-detail-price-row">

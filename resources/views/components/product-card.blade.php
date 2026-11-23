@@ -50,7 +50,9 @@
     </div>
 
     <h3 class="product-title">
-        <a href="{{ route('product.show', $product->slug) }}"> {{ $product->name  }}</a>
+        <a href="{{ route('product.show', $product->slug) }}">
+            Семена сорта
+            {{ $product->name  }}</a>
 
     </h3>
 
