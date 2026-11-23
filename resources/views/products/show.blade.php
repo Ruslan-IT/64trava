@@ -322,7 +322,7 @@
                                 </div>
                                 <div class="product-detail-feature-text">
                                     <span>ГЕНОТИП</span>
-                                    <strong>Sativa {{ $product->sativa_percent }}% / Indica {{ $product->indica_percent }}%</strong>
+                                    <strong>Сатива {{ $product->sativa_percent }}% / Индика {{ $product->indica_percent }}%</strong>
                                 </div>
                             </div>
                             @endif
