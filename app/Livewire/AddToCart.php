@@ -50,7 +50,12 @@ class AddToCart extends Component
         }
 
         $this->selectedVariantId = $variant->id;
-        $this->syncQuantityFromCart($cart);
+
+        // Состояние +/− только для текущей фасовки: в корзине — показать, иначе скрыть.
+        $cartQuantity = (int) ($cart->get()[$variant->id]['quantity'] ?? 0);
+
+        $this->addedToCart = $cartQuantity > 0;
+        $this->quantity = $cartQuantity > 0 ? $cartQuantity : 1;
     }
 
     public function increment(CartService $cart): void

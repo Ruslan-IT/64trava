@@ -170,6 +170,50 @@ class AddToCartQuantitySyncTest extends TestCase
         $this->assertSame(2, session('cart')[$variant->id]['quantity']);
     }
 
+    public function test_quantity_block_follows_selected_variant_cart_state(): void
+    {
+        $brand = Brand::query()->create(['name' => 'Variant Switch Farm '.uniqid()]);
+        $product = Product::query()->create([
+            'brand_id' => $brand->id,
+            'name' => 'Variant Switch Strain '.uniqid(),
+            'price' => 1000,
+            'seed_type' => 'F',
+        ]);
+        $variant5 = ProductVariant::query()->create([
+            'product_id' => $product->id,
+            'sku' => 'VS5-'.uniqid(),
+            'package_size' => 5,
+            'price' => 4200,
+            'stock' => 0,
+        ]);
+        $variant10 = ProductVariant::query()->create([
+            'product_id' => $product->id,
+            'sku' => 'VS10-'.uniqid(),
+            'package_size' => 10,
+            'price' => 4300,
+            'stock' => 0,
+        ]);
+
+        app(CartService::class)->add($variant10, 2);
+
+        Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant10->id)
+            ->assertSet('addedToCart', true)
+            ->assertSet('quantity', 2)
+            ->assertSeeHtml('class="quantity"')
+            ->assertSee('В корзине')
+            ->call('selectVariant', $variant5->id)
+            ->assertSet('addedToCart', false)
+            ->assertSet('quantity', 1)
+            ->assertDontSeeHtml('class="quantity"')
+            ->assertSee('В корзину')
+            ->call('selectVariant', $variant10->id)
+            ->assertSet('addedToCart', true)
+            ->assertSet('quantity', 2)
+            ->assertSeeHtml('class="quantity"')
+            ->assertSee('В корзине');
+    }
+
     /**
      * @return array{0: Product, 1: ProductVariant}
      */
