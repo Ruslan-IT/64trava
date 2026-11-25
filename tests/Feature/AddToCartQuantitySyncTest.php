@@ -33,6 +33,19 @@ class AddToCartQuantitySyncTest extends TestCase
         return $app;
     }
 
+    public function test_no_variant_is_active_by_default(): void
+    {
+        [$product, $variant] = $this->createProductWithVariant();
+
+        Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->assertSet('selectedVariantId', null)
+            ->assertSet('addedToCart', false)
+            ->assertDontSeeHtml('active"')
+            ->call('selectVariant', $variant->id)
+            ->assertSet('selectedVariantId', $variant->id)
+            ->assertSeeHtml('active"');
+    }
+
     public function test_empty_cart_shows_only_add_button_without_quantity_block(): void
     {
         [$product] = $this->createProductWithVariant();
@@ -50,6 +63,7 @@ class AddToCartQuantitySyncTest extends TestCase
         [$product, $variant] = $this->createProductWithVariant(stock: 10);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant->id)
             ->call('addToCart')
             ->assertSet('quantity', 1)
             ->assertSet('addedToCart', true)
@@ -66,6 +80,7 @@ class AddToCartQuantitySyncTest extends TestCase
         [$product, $variant] = $this->createProductWithVariant(stock: 10);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant->id)
             ->call('addToCart')
             ->call('increment')
             ->call('increment')
@@ -82,6 +97,7 @@ class AddToCartQuantitySyncTest extends TestCase
         app(CartService::class)->add($variant, 3);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant->id)
             ->assertSet('quantity', 3)
             ->call('decrement')
             ->assertSet('quantity', 2)
@@ -104,6 +120,7 @@ class AddToCartQuantitySyncTest extends TestCase
         app(CartService::class)->add($variant, 1);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant->id)
             ->call('decrement')
             ->assertSet('addedToCart', false)
             ->call('addToCart')
@@ -114,17 +131,21 @@ class AddToCartQuantitySyncTest extends TestCase
         $this->assertSame(1, session('cart')[$variant->id]['quantity']);
     }
 
-    public function test_state_restores_from_cart_on_remount(): void
+    public function test_state_restores_from_cart_after_variant_reselected(): void
     {
         [$product, $variant] = $this->createProductWithVariant(stock: 10);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant->id)
             ->call('addToCart')
             ->call('increment')
             ->call('increment')
             ->assertSet('quantity', 3);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->assertSet('selectedVariantId', null)
+            ->assertSet('addedToCart', false)
+            ->call('selectVariant', $variant->id)
             ->assertSet('quantity', 3)
             ->assertSet('addedToCart', true)
             ->assertSee('В корзине')
@@ -141,6 +162,7 @@ class AddToCartQuantitySyncTest extends TestCase
         app(CartService::class)->add($variant, 2);
 
         $component = Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->call('selectVariant', $variant->id)
             ->assertSet('addedToCart', true)
             ->assertSeeHtml('class="quantity"');
 
@@ -159,6 +181,8 @@ class AddToCartQuantitySyncTest extends TestCase
         [$product, $variant] = $this->createProductWithVariant(stock: 0);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->assertSet('selectedVariantId', null)
+            ->call('selectVariant', $variant->id)
             ->assertSet('selectedVariantId', $variant->id)
             ->assertSee('В корзину')
             ->call('addToCart')
@@ -197,6 +221,7 @@ class AddToCartQuantitySyncTest extends TestCase
         app(CartService::class)->add($variant10, 2);
 
         Livewire::test(AddToCart::class, ['product' => $product->fresh('variants')])
+            ->assertSet('selectedVariantId', null)
             ->call('selectVariant', $variant10->id)
             ->assertSet('addedToCart', true)
             ->assertSet('quantity', 2)

@@ -309,7 +309,7 @@
 
         <div
             class="variant-out-of-stock"
-            style="{{ $selectedVariantId ? 'display:none;' : 'display:block;' }}"
+            style="{{ $product->variants->isNotEmpty() ? 'display:none;' : 'display:block;' }}"
         >
             Нет в наличии
         </div>

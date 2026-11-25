@@ -25,9 +25,8 @@ class AddToCart extends Component
         $this->product = $product;
         $this->type = $type;
 
-        $source = static::priceSource($product);
-
-        $this->selectedVariantId = $source instanceof ProductVariant ? $source->id : null;
+        // Фасовка неактивна, пока пользователь сам не выберет.
+        $this->selectedVariantId = null;
         $this->syncQuantityFromCart($cart);
     }
 
