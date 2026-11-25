@@ -367,17 +367,10 @@
 
 
         @if($product->variants->isNotEmpty())
-        <div
-            class="product-actions"
-            wire:key="product-actions-{{ $selectedVariantId }}-{{ $addedToCart ? 'in' : 'out' }}"
-        >
+        <div class="product-actions">
 
             @if($addedToCart)
-                <div
-                    class="quantity"
-                    wire:loading.remove
-                    wire:target="selectVariant"
-                >
+                <div class="quantity">
 
                     <button
                         type="button"
@@ -401,12 +394,7 @@
 
                 </div>
 
-                <a
-                    href="{{ route('cart.index') }}"
-                    class="add-to-cart"
-                    wire:loading.remove
-                    wire:target="selectVariant"
-                >
+                <a href="{{ route('cart.index') }}" class="add-to-cart">
                     В корзине
                 </a>
             @else

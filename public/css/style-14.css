@@ -1478,7 +1478,7 @@ input, button {
 .products-grid-catalog{
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 30px;
+    gap: 10px 10px;
 
 }
 
@@ -1696,8 +1696,18 @@ input, button {
     width: 100%;
     min-width: 0;
     /*height: 100%;*/
+    padding: 10px 10px;
 }
 
+
+.product-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+}
+.product-card:hover {
+    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.11);
+}
 
 .product-image-wrapper {
     position: relative;
@@ -1945,6 +1955,7 @@ input, button {
     gap: 15px;
 
     margin-top: 15px;
+    min-height: 50px;
 }
 
 .product-actions .add-to-cart {
@@ -5046,7 +5057,7 @@ input, button {
 
 .product-card {
     width: 100%;
-    margin: 0 0 60px 0;
+    margin: 0 0 50px 0;
 }
 
 
