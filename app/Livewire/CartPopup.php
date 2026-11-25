@@ -61,7 +61,7 @@ class CartPopup extends Component
     {
         $variant = ProductVariant::find($variantId);
 
-        if (!$variant || $variant->stock <= 0) {
+        if (!$variant) {
             return;
         }
 
@@ -73,9 +73,7 @@ class CartPopup extends Component
 
         $quantity = $items[$variantId]['quantity'];
 
-        if ($quantity < $variant->stock) {
-            $cart->update($variant, $quantity + 1);
-        }
+        $cart->update($variant, $quantity + 1);
 
         $this->loadCart($cart);
         $this->dispatch('cart-updated');

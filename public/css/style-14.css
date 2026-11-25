@@ -1691,9 +1691,11 @@ input, button {
 ========================= */
 
 .product-card {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     min-width: 0;
-
+    height: 100%;
 }
 
 
@@ -1906,6 +1908,7 @@ input, button {
 }
 
 .add-to-cart-block{
+    margin-top: auto;
     border-top: 1px solid #EDEDED;
 }
 
@@ -1942,6 +1945,10 @@ input, button {
     gap: 15px;
 
     margin-top: 15px;
+}
+
+.product-actions .add-to-cart {
+    margin-left: auto;
 }
 
 
@@ -1984,6 +1991,10 @@ input, button {
 
 
 .add-to-cart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
     min-height: 35px;
     padding: 15px 29px;
     border: 0;
@@ -1994,6 +2005,7 @@ input, button {
     cursor: pointer;
     white-space: nowrap;
     border-radius: 5px;
+    text-decoration: none;
 }
 
 .add-to-cart {
@@ -3458,6 +3470,15 @@ input, button {
     font-weight: 600;
     line-height: 1.3;
     color: #000;
+}
+
+.cart-product-title-row h2 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.cart-product-title-row h2 a:hover {
+    text-decoration: underline;
 }
 
 .cart-product-subtitle {

@@ -121,7 +121,11 @@
 
                                                 <div class="cart-product-title-row">
                                                     <div>
-                                                        <h2>{{ $variant->product->name }}</h2>
+                                                        <h2>
+                                                            <a href="{{ route('product.show', $variant->product->slug) }}">
+                                                                {{ $variant->product->name }}
+                                                            </a>
+                                                        </h2>
 
                                                         <p class="cart-product-subtitle">
                                                             {{ $variant->name }}

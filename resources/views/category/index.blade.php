@@ -136,7 +136,6 @@
 
                         const variantPrice = parseFloat(this.dataset.price);
                         const variantOldPrice = parseFloat(this.dataset.oldPrice);
-                        const stock = parseInt(this.dataset.stock);
 
                         if (price) {
                             price.textContent = variantPrice + ' р';
@@ -157,21 +156,19 @@
 
                         this.classList.add('active');
 
-                        if (stock <= 0) {
-                            outOfStock.style.display = 'block';
-                            quantity = 0;
-                            quantityValue.textContent = '0';
-                            minusButton.disabled = true;
-                            plusButton.disabled = true;
-
-                            return;
+                        if (outOfStock) {
+                            outOfStock.style.display = 'none';
                         }
-
-                        outOfStock.style.display = 'none';
                         quantity = 1;
-                        quantityValue.textContent = quantity;
-                        minusButton.disabled = false;
-                        plusButton.disabled = quantity >= stock;
+                        if (quantityValue) {
+                            quantityValue.textContent = quantity;
+                        }
+                        if (minusButton) {
+                            minusButton.disabled = false;
+                        }
+                        if (plusButton) {
+                            plusButton.disabled = false;
+                        }
                     });
                 });
 
@@ -180,14 +177,12 @@
                         return;
                     }
 
-                    const stock = parseInt(selectedVariant.dataset.stock);
-
                     if (quantity > 1) {
                         quantity--;
                     }
 
                     quantityValue.textContent = quantity;
-                    plusButton.disabled = quantity >= stock;
+                    plusButton.disabled = false;
                 });
 
                 plusButton?.addEventListener('click', function () {
@@ -195,14 +190,10 @@
                         return;
                     }
 
-                    const stock = parseInt(selectedVariant.dataset.stock);
-
-                    if (quantity < stock) {
-                        quantity++;
-                    }
+                    quantity++;
 
                     quantityValue.textContent = quantity;
-                    plusButton.disabled = quantity >= stock;
+                    plusButton.disabled = false;
                 });
             });
         }

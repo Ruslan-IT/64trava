@@ -139,7 +139,7 @@ class CartPage extends Component
     ): void {
         $variant = ProductVariant::find($variantId);
 
-        if (!$variant || $variant->stock <= 0) {
+        if (!$variant) {
             return;
         }
 
@@ -150,10 +150,6 @@ class CartPage extends Component
         }
 
         $quantity = $items[$variantId]['quantity'];
-
-        if ($quantity >= $variant->stock) {
-            return;
-        }
 
         $cart->update($variant, $quantity + 1);
 

@@ -34,15 +34,7 @@ class CartService
             ];
         }
 
-        // Увеличиваем количество
-        $newQuantity = $cart[$variantId]['quantity'] + $quantity;
-
-        // Не даём превысить остаток
-        if ($newQuantity > $variant->stock) {
-            $newQuantity = $variant->stock;
-        }
-
-        $cart[$variantId]['quantity'] = $newQuantity;
+        $cart[$variantId]['quantity'] = $cart[$variantId]['quantity'] + $quantity;
 
         session()->put('cart', $cart);
 
@@ -63,7 +55,7 @@ class CartService
                 'product_id' => $variant->product_id,
                 'variant_id' => $variant->id,
                 'sku' => $variant->sku,
-                'quantity' => min($quantity, $variant->stock),
+                'quantity' => $quantity,
                 'price' => $variant->price,
             ];
         }

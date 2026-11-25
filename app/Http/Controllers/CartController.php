@@ -30,13 +30,6 @@ class CartController extends Controller
 
         $variant = ProductVariant::findOrFail($request->variant_id);
 
-        if ($variant->stock <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Товара нет в наличии.',
-            ], 422);
-        }
-
         $cart = $this->cart->add(
             $variant,
             $request->quantity

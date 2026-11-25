@@ -38,7 +38,6 @@
                 href="#"
                 wire:click.prevent="selectVariant({{ $variant->id }})"
                 class="pagination-button
-        {{ $variant->stock <= 0 ? 'disabled' : '' }}
         {{ $selectedVariantId === $variant->id ? 'active' : '' }}"
                 data-price="{{ $variant->price }}"
                 data-old-price="{{ $variant->old_price ?? '' }}"
@@ -134,8 +133,7 @@
 
                         <div
                             class="product-pack
-                        {{ $selectedVariantId === $variant->id ? 'active' : '' }}
-                        {{ $variant->stock <= 0 ? 'disabled' : '' }}"
+                        {{ $selectedVariantId === $variant->id ? 'active' : '' }}"
                             wire:click="selectVariant({{ $variant->id }})"
                         >
                             <div class="product-pack__icon">
@@ -355,7 +353,6 @@
                     href="#"
                     wire:click.prevent="selectVariant({{ $variant->id }})"
                     class="pagination-button
-                        {{ $variant->stock <= 0 ? 'disabled' : '' }}
                         {{ $selectedVariantId === $variant->id ? 'active' : '' }}"
                     data-price="{{ $variant->price }}"
                     data-old-price="{{ $variant->old_price ?? '' }}"
@@ -372,44 +369,43 @@
         @if($product->variants->isNotEmpty())
         <div class="product-actions">
 
-            <div class="quantity">
+            @if($addedToCart)
+                <div class="quantity">
 
+                    <button
+                        type="button"
+                        class="quantity-button quantity-minus"
+                        wire:click="decrement"
+                    >
+                        −
+                    </button>
+
+                    <span class="quantity-value">
+                        {{ $quantity }}
+                    </span>
+
+                    <button
+                        type="button"
+                        class="quantity-button quantity-plus"
+                        wire:click="increment"
+                    >
+                        +
+                    </button>
+
+                </div>
+
+                <a href="{{ route('cart.index') }}" class="add-to-cart">
+                    В корзине
+                </a>
+            @else
                 <button
                     type="button"
-                    class="quantity-button quantity-minus"
-                    wire:click="decrement"
+                    class="add-to-cart"
+                    wire:click="addToCart"
                 >
-                    −
+                    В корзину
                 </button>
-
-                <span class="quantity-value">
-                    {{ $quantity }}
-                </span>
-
-                <button
-                    type="button"
-                    class="quantity-button quantity-plus"
-                    wire:click="increment"
-                >
-                    +
-                </button>
-
-            </div>
-
-
-            <button
-                type="button"
-                class="add-to-cart {{ $addedToCart ? 'added' : '' }}"
-                wire:click="addToCart"
-                x-data
-                x-on:reset-add-button.window="
-                    setTimeout(() => {
-                        $wire.set('addedToCart', false)
-                    }, 1500)
-                "
-            >
-                {{ $addedToCart ? 'Добавлено' : 'В корзину' }}
-            </button>
+            @endif
 
         </div>
         @endif
